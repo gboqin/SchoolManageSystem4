@@ -1,0 +1,186 @@
+﻿@{ 
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <script src="~/lib/vue/vue.min.js"></script>
+    <script src="~/lib/vue-resource/vue-resource.min.js"></script>
+    <script src="~/lib/element-ui/index.min.js"></script>
+    <link href="~/lib/element-ui/theme-chalk/index.min.css" rel="stylesheet" />
+    <title>管理系统</title>
+    <style>
+        .el-row {
+            margin-bottom: 20px;
+        }
+
+        .login-box {
+            margin-top: 20%;
+            margin-left: 40%;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="login-box" id="app2">
+        <el-row>
+            <el-col :span="8">
+                <el-input id="Email" v-model="loginParam.Email" placeholder="请输入邮箱地址">
+                    <template slot="prepend">
+                        邮箱地址
+                    </template>
+                </el-input>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="8">
+                <el-input id="Password" v-model="loginParam.Password" type="password" placeholder="请输入密码">
+                    <template slot="prepend">
+                        密码
+                    </template>
+                </el-input>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="8">
+                <el-button id="login" v-on:click="check" style="width:100%" type="primary">登录</el-button>
+            </el-col>
+        </el-row>
+    </div>
+
+    <script type="text/javascript">
+        window.onload = function () {
+            new Vue({
+                el: '#app2',
+                data: {
+                    logining: false,
+                    loginParam: { Email: '', Password: '', Uuid: 0, Captcha:0}
+                },
+                methods: {
+                    check: function (event) {
+                        //获取值
+                        alert(this.loginParam.Email);
+                        if (this.loginParam.Email == '' || this.loginParam.Password == '') {
+                            this.$message({
+                                message: '邮箱或密码为空！',
+                                type: 'error'
+                            })
+                            return;
+                        }
+                        var turnUrl = '/Login/Index';
+                        var url = "/Login/Login";
+                        alert(this.loginParam.Password);
+                        //post 发送数据到后端，需要第三个参数 {emulateJSON:true}。
+                        //emulateJSON 的作用： 如果Web服务器无法处理编码为 application / json 的请求，
+                        //你可以启用 emulateJSON 选项。
+                        //this.$http.post("/Login/Login", this.loginParam, { emulateJSON: true }
+                        this.$http.get("/Login/Login", { params: this.loginParam }
+                        ).then(function (res) {
+                            var result = res.body;
+                            alert(JSON.stringify(result));
+                            this.$message({
+                                message: result.Message,
+                                type: result.Status == 0 ? 'success' : 'error'
+                            })
+                            this.logining = false;
+                            if (result.Status == 0) {
+                                global.setUser(result.Data.Email, result.Data.Password);
+                                window.location = turnUrl;
+                            }
+                            window.location = '/Home/Index';
+                        }, function (e) {
+                            console.log(e);
+                            this.$message({
+                                message: '登录异常',
+                                type: 'error'
+                            })
+                        });
+                    }
+                }
+            })
+        }
+    </script>
+</body>
+<!--
+无法传递复杂参数(对象)------报错
+get进行调用时,如果遇到复杂参数会自动转化成Post请求
+解决方案:不使用路径进行复杂参数的传递,使用Json进行数据传递
+{
+    "uid":"1",
+    "username":"jack",
+    "password":"1234"
+}
+
+        $http.get(URL,{
+        params: {
+            "id":id
+        }
+    })
+    .success(function(response, status, headers, config){
+
+    })
+
+     $http.post(URL,{
+        "id":id
+    })
+    .success(function(response, status, headers, config){
+
+    })
+
+
+<script type = "text/javascript" >
+    window.onload = function () {
+        new Vue({
+            el: '#app',
+            data: {
+                name: '',
+                password: '',
+                logining: false
+            },
+            methods: {
+                check: function (event) {
+                    //获取值
+                    var name = this.name;
+                    var password = this.password;
+                    if (name == '' || password == '') {
+                        this.$message({
+                            message: '账号或密码为空！',
+                            type: 'error'
+                        })
+                        return;
+                    }
+                    var turnUrl = kit.getQueryString('ReturnUrl');
+                    if (turnUrl == undefined || turnUrl == null || turnUrl.length <= 0) {
+                        turnUrl = "/default.aspx";
+                    }
+                    var url = '/API/Login/Login?account=' + name + "&password=" + password;
+                    this.logining = true;
+                    this.$http.get(url).then(function (res) {
+                        var result = res.body;
+                        this.$message({
+                            message: result.Message,
+                            type: result.Status == 0 ? 'success' : 'error'
+                        })
+                        this.logining = false;
+                        if (result.Status == 0) {
+                            global.setUser(result.Data.UserGuid, result.Data.UserName);
+                            window.location = turnUrl;
+                        }
+                    }, function (e) {
+                        console.log(e);
+                        this.$message({
+                            message: '登录异常',
+                            type: 'error'
+                        })
+                        this.logining = false;
+                    });
+                }
+            }
+        })
+    }
+</script>
+-->
+</html>
+
+

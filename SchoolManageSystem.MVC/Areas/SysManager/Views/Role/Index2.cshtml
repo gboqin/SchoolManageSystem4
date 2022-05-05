@@ -1,0 +1,190 @@
+﻿@{
+    Layout=null;
+}
+<!doctype>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>角色管理</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.min.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+    <style>
+        html, body {
+            background-color: #F1F1F1;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    @*<script type="text/html" id="toolbar">
+            <div>
+
+            </div>
+        </script>
+        <table id="roleTable"></table>*@
+
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md12">
+                <div class="layui-card layui-form">
+                    <div class="layui-card-header">查询条件</div>
+                    <div class="layui-card-body layui-row layui-col-space15">
+                        <div class="layui-col-md2">
+                            <input type="text" class="layui-input" id="deviceNumber" placeholder="设备名称" />
+                        </div>
+                        <div class="layui-col-md2">
+                            <select name="" lay-verify="required" lay-search id="">
+                                <option value="">设备型号</option>
+                                <option value="">名称列表</option>
+                            </select>
+                        </div>
+                        <div class="layui-col-md12">
+                            <button class="layui-btn" data-type="reload">查询</button>
+                            <div class="layui-btn-group demoTable">
+                                <button class="layui-btn" data-type="getCheckData">获取选中行数据</button>
+                                <button class="layui-btn" data-type="getCheckLength">获取选中数目</button>
+                                <button class="layui-btn" data-type="isAll">验证是否全选</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12">
+                <div class="layui-card layui-form">
+                    <div class="layui-card-header">查询结果</div>
+                    <div class="layui-card-body">
+                        <table class="layui-hide" id="layListId" lay-filter="layList"></table>
+
+                        <script type="text/html" id="barDemo">
+                            <button type="button" class="layui-btn layui-btn-sm layui-btn-warm" lay-event="maintainRecord">保养记录</button>
+                            <button type="button" class="layui-btn layui-btn-sm layui-btn-warm" lay-event="repairRecord">维修记录</button>
+
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        layui.use('table', function () {
+            var table = layui.table;
+            table.render({
+                elem: '#layListId',
+                id: 'layListId',
+                
+                title: '维修保养报',
+                cellMinWidth: 100,
+                cols: [
+                    [{
+                        type: 'checkbox',
+                        fixed: 'left'
+                    }, {
+                        type: 'numbers',
+                        fixed: 'left'
+                    }, {
+                        field: 'deviceNumber',
+                        title: '设备编号',
+                        minWidth: '120'
+                    }, {
+                        field: 'deviceName',
+                        title: '设备名称',
+                        minWidth: '120'
+                    }, {
+                        field: 'deviceType',
+                        title: '设备型号'
+                    }, {
+                        title: '操作',
+                        minWidth: '180',
+                        align: 'center',
+                        toolbar: '#barDemo'
+                    }]
+                ],
+                page: true
+                , limits: [10, 20, 30]  //一页选择显示3,5或10条数据
+                , limit: 10  //一页显示10条数据
+                , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据，res为从url中get到的数据
+                    var result;
+                    if (this.page.curr) {
+                        result = res.data.slice(this.limit * (this.page.curr - 1), this.limit * this.page.curr);
+                    }
+                    else {
+                        result = res.data.slice(0, this.limit);
+                    }
+                    return {
+                        "code": res.code, //解析接口状态
+                        "msg": res.msg, //解析提示文本
+                        "count": res.count, //解析数据长度
+                        "data": result //解析数据列表
+                    };
+                }
+            });
+            //监听工具条
+            table.on('tool(layList)', function (obj) {
+                var data = obj.data; //获得当前行数据
+                switch (obj.event) {
+                    case 'maintainRecord':
+                        maintainRecord();
+                        break;
+                    case 'repairRecord':
+                        repairRecord();
+                        break;
+                    default:
+                        break;
+                }
+
+            });
+            var $ = layui.$,
+                active = {
+                    reload: function () {
+                        
+                        var deviceNumber1 = $("#deviceNumber").val();
+                        alert(JSON.stringify(deviceNumber1));
+                        //执行重载
+                        table.reload('layListId', {
+                            url: '/json/table.json',
+                            page: {
+                                curr: 1
+                            },
+                            where: {
+                                'deviceNumber': deviceNumber1
+                            }
+                        });
+                    },
+                    getCheckData: function () { //获取选中数据
+                        var checkStatus = table.checkStatus('layListId'),
+                            data = checkStatus.data;
+                        layer.alert(JSON.stringify(data));
+                    },
+                    getCheckLength: function () { //获取选中数目
+                        var checkStatus = table.checkStatus('layListId'),
+                            data = checkStatus.data;
+                        layer.msg('选中了：' + data.length + ' 个');
+                    },
+                    isAll: function () { //验证是否全选
+                        var checkStatus = table.checkStatus('layListId');
+                        layer.msg(checkStatus.isAll ? '全选' : '未全选')
+                    }
+
+                };
+            $('.layui-btn').on('click', function () {
+                var type = $(this).data('type');
+                active[type] && active[type].call(this);
+            });
+
+            function maintainRecord() {
+                layer.msg("保养记录");
+            };
+
+            function repairRecord() {
+                layer.msg("维修记录");
+
+            };
+        });
+    </script>
+
+</body>
+</html>
+

@@ -1,0 +1,159 @@
+{
+  "code": 0,
+  "msg": null,
+  "count": 30,
+  "data": [
+    {
+      "deviceNumber": "F10001",
+      "deviceName": "东软CA",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10002",
+      "deviceName": "早发定山CB",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10003",
+      "deviceName": "新区CC",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10004",
+      "deviceName": "东软CD",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10005",
+      "deviceName": "东软ME",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10006",
+      "deviceName": "新区CF",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10007",
+      "deviceName": "东软CI",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10008",
+      "deviceName": "东软MJ",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10009",
+      "deviceName": "新区CK",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10010",
+      "deviceName": "东软CL",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10011",
+      "deviceName": "东软MM",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10012",
+      "deviceName": "新区CN",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10013",
+      "deviceName": "东软CO",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10014",
+      "deviceName": "东软MP",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10015",
+      "deviceName": "新区CQ",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10016",
+      "deviceName": "东软CR",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10017",
+      "deviceName": "东软MS",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10018",
+      "deviceName": "新区CT",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10019",
+      "deviceName": "东软CU",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10020",
+      "deviceName": "东软MV",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10021",
+      "deviceName": "新区CW",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10022",
+      "deviceName": "东软CY",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10023",
+      "deviceName": "东软MZ",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10024",
+      "deviceName": "新区AT",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10025",
+      "deviceName": "东软BT",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10026",
+      "deviceName": "东软CR",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10027",
+      "deviceName": "新区DT",
+      "deviceType": "Neuviz128"
+    },
+    {
+      "deviceNumber": "F10028",
+      "deviceName": "东软ET",
+      "deviceType": "Neuviz-twin"
+    },
+    {
+      "deviceNumber": "F10029",
+      "deviceName": "东软FR",
+      "deviceType": "NSM-P035"
+    },
+    {
+      "deviceNumber": "F10030",
+      "deviceName": "新区IT",
+      "deviceType": "Neuviz128"
+    }
+  ]
+}
+
+

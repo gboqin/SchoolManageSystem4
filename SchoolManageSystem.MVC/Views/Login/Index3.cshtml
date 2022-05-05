@@ -1,0 +1,219 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>用户登录</title>
+    <link rel="stylesheet" href="~/lib/element-ui/theme-chalk/index.css" />
+    <script type="text/javascript" src="~/lib/vue/vue.js"></script>
+    <script src="~/lib/vue-resource/vue-resource.min.js"></script>
+    <script type="text/javascript" src="~/lib/element-ui/index.js"></script>
+    <script type="text/javascript" src="~/js/Login.js"></script>
+    <style type="text/css">
+        .login_box {
+            width: 100%;
+            height: 100%;
+            background-color: #324057;
+            position: relative;
+        }
+
+            .login_box .login_content {
+                width: 35%;
+                height: 280px;
+                background-color: white;
+                border: solid 1px;
+                border-radius: 10px;
+                border-color: midnightblue;
+                overflow: hidden;
+                position: absolute;
+                top: 50%;
+                left: 30%;
+            }
+
+                .login_box .login_content h2 {
+                    text-align: center;
+                    width: 100%;
+                    height: 40px;
+                    line-height: 40px;
+                    margin: 5px;
+                }
+
+                .login_box .login_content .demo-ruleForm {
+                    padding: 5px;
+                }
+
+                    .login_box .login_content .demo-ruleForm .el-form-item {
+                        margin: 5px;
+                    }
+
+        .captcha_code img {
+            margin-left: 20px;
+            padding-top: 1px;
+            PADDING-LEFT: 10px;
+            cursor: pointer;
+            height: 38px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="login_box">
+        @*<input type="text" onkeyup="this.value = this.value.replace(/[^a-zA-Z]/g,'')" />*@
+        @*<input type="text" onkeyup="this.value = this.value.replace(/[^a-zA-Z0-9-._]/g,'')" />*@
+        @*<input type="text" id="mytry" onblur="checkEmail('mytry', this.value);" />*@
+        <div class="login_content">
+            <h2>用户登录</h2>
+            <el-form status-icon
+                     label-width="65px"
+                     class="demo-ruleForm">
+                <el-form-item label="邮箱">
+                    <el-input id="Email" v-model="loginParam.Email" placeholder="请输入邮箱" prefix-icon="el-icon-user-solid" v-on:blur="onblurEmail()">
+                        <i id="esufIcon" slot="suffix"></i>
+                    </el-input>
+                </el-form-item>
+                <el-form-item label="密码">
+                    <el-input type="password" v-model="loginParam.Password" placeholder="请输入密码" prefix-icon="el-icon-lock" v-on:blur="onblurPassword()">
+                        <i id="psufIcon" slot="suffix"></i>
+                    </el-input>
+                </el-form-item>
+                <el-form-item label="">
+                    <el-input v-model="loginParam.Captcha"
+                              placeholder="验证码"
+                              prefix-icon="lj-icon-yanzhengma"
+                              autocomplete="off"
+                              autocapitalize="off"
+                              spellcheck="false"
+                              maxlength="4"
+                              style="float: left; width: 178px;"
+                              v-on:blur="onblurCaptcha()" >
+                        <i id="csufIcon" slot="suffix"></i>
+                    </el-input>
+                    <div class="captcha_code">
+                        <img onclick="this.src='/Login/GetValidateCode?time='+(new Date()).getTime()"
+        alt="看不清楚请点击刷新验证码" src="/Login/GetValidateCode" />
+                    </div>     
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" style="width: 290px;" v-on:click="clickLogin()">登录</el-button>
+                    @*<el-button class="test">重置</el-button>*@
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            loginParam: { Email: '', Password: '', Uuid: 0, Captcha: '' },
+        },
+        methods: {
+            onblurEmail: function () {
+                //var e = document.getElementsByClassName('el-icon-circle-check')[0];
+                //var ec = /\w+([-+.]\w+)*@@\w+([-.]\w+)*\.\w+([-.]\w+)*/;
+                var e = document.getElementById("esufIcon");
+                //CheckEmail(this.loginParam.Email) ? e.style.color = "blue" : e.style.color = "red";
+                if (this.loginParam.Email.trim() == '') {
+                    return;
+                }
+
+                if (CheckEmail(this.loginParam.Email)) {
+                    e.className = 'el-icon-success';
+                    e.style.color = "green";
+                } else {
+                    e.className = 'el-icon-error';
+                    e.style.color = "red";
+                }
+            },
+            onblurPassword: function () {
+                var e = document.getElementById("psufIcon");
+                if (this.loginParam.Password.trim() == '') { return; }
+                if (CheckPassword(this.loginParam.Password)) {
+                    e.className = 'el-icon-success';
+                    e.style.color = "green";
+                } else {
+                    e.className = 'el-icon-error';
+                    e.style.color = "red";
+                }
+            },
+            onblurCaptcha: function () {
+                var e = document.getElementById("csufIcon");
+                @*var code = "@base.Context.Session.GetString("ValidateCode")";*@
+                @*var code = @TempData["ValidateCode"];*@
+                @*var code = '@ViewBag.AA';*@
+                @*var code = '@TempData["BB"]';*@
+                if (this.loginParam.Captcha.trim() == '') { return; }
+                if (this.loginParam.Captcha.length == 4) {
+                    e.className = 'el-icon-success';
+                    e.style.color = "green";
+                } else {
+                    e.className = 'el-icon-error';
+                    e.style.color = "red";
+                }
+            },
+            // 点击登录时做的校验
+            clickLogin: function () {
+                if (!CheckEmail(this.loginParam.Email)) {
+                    this.$message.error('请输入正确格式的邮箱！');
+                    return;
+                }
+                if (this.pwd == '') {
+                    this.$message.error('请输入用户密码');
+                    return;
+                }
+                if (this.loginParam.Captcha) {
+                    if (this.loginParam.Captcha.length != 4) {
+                        this.$message.error('请输入四位数的验证码！');
+                        return;
+                    }
+                } else {
+                    // 输入为空
+                    this.$message.error('请输入验证码');
+                    return;
+                }
+                this.login();
+            },
+            // 登录
+            login: function () {
+                // 请求登录接口
+                //var turnUrl = '/Login/Index';
+                var url = "/Login/Login";
+                //post 发送数据到后端，需要第三个参数 {emulateJSON:true}。
+                //emulateJSON 的作用： 如果Web服务器无法处理编码为 application / json 的请求，
+                //你可以启用 emulateJSON 选项。
+                //this.$http.post("/Login/Login", this.loginParam, { emulateJSON: true }
+                this.$http.get(url, { params: this.loginParam }
+                ).then(function (res) {
+                    var result = res.body;
+                    alert(JSON.stringify(result));
+                    if (result.success) {
+                        //if (result.data.data.roleList.includes("System")) {
+                        if (result.data.data.roleList.indexOf("System")>-1) {
+                            window.location = '/SysManager/SysManager/Index'; 
+                        } else {
+                            window.location = '/Home/Index';
+                        }
+                          
+                    } else {
+                        this.$message({
+                            message: result.message,
+                            type: result.success ? 'success' : 'error'
+                        });
+                        //window.location = turnUrl;
+                    }                  
+                }, function (e) {
+                    console.log(e);
+                    this.$message({
+                        message: '登录异常',
+                        type: 'error'
+                    })
+                });
+            }
+        }
+    });
+</script>
+

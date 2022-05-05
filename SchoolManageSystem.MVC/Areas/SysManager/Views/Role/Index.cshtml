@@ -1,0 +1,223 @@
+﻿@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>角色管理</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+</head>
+<body style="width:100%;height:100%;margin:0;padding:0">
+    <script type="text/html" id="toolbar">
+        <div class="layui-form-item" style="margin-bottom:5px">
+            <label class="layui-form-label" style="width:auto" for="rolename">角色名称</label>
+            <div class="layui-input-inline">
+                <input type="text" style=" height: 30px; line-height: 30px" id="rolename" name="rolename" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input layui-input-sm">
+            </div>
+            <div class="layui-input-inline">
+                <button id="search" class="layui-btn layui-btn-sm" data-type="reload" lay-event="reload"><i class="layui-icon layui-icon-search"></i>查询</button>
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-bottom:5px">
+            <button class="layui-btn layui-btn-normal layui-btn-sm" lay-event="addRole"><i class="layui-icon layui-icon-add-circle-fine"></i>添加</button>
+            @*<button class="layui-btn layui-btn-sm" lay-event="clearFilter">清除所有筛选条件</button>*@
+        </div>
+    </script>
+    <script type="text/html" id="bar">
+        <a class="layui-btn layui-btn-xs" lay-event="edtRole">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delRole">删除</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="assingPre">分配权限</a>
+    </script>
+    <table id="myTable" style="margin: 0; padding: 0" lay-filter="layList"></table>
+
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        layui.use('table', function () {
+            var table = layui.table;
+            //var index = layer.msg("查询中，请稍后……", { icon: 16, time: false, shade: 0 });
+            table.render({
+                elem: '#myTable',
+                id: 'roleTable',
+                title: '角色管理',
+                cellMinWidth: 40,
+                toolbar: '#toolbar',
+                defaultToolbar: ["filter"],//去掉右则三个按钮["filter","exports","print"]
+                cols: [
+                    [{
+                        type: 'checkbox',
+                        fixed: 'left'
+                    }, {
+                        type: 'numbers',
+                        fixed: 'left'
+                    }, {
+                        field: 'Name',
+                        title: '角色名称',
+                        Width: '80'
+                    }, {
+                        field: 'RoleDesc',
+                        title: '描述',
+                        Width: '80'
+                    }, {
+                        field: 'Num',
+                        title: '排序号',
+                        Width: '45'
+                    }, {
+                        field: 'ModifiedTime',
+                        title: '最后操作时间',
+                        /*minWidth: '80'*/
+                        Width: '80'
+                    }, {
+                        field: 'OperatorName',
+                        title: '最后操作人',
+                        Width: '60'
+                    }, {
+                        title: '操作',
+                        Width: '140',
+                        align: 'center',
+                        toolbar: '#bar'
+                    }]
+                ],
+                page: true
+                , limits: [10, 20, 30]  //一页选择显示3,5或10条数据
+                , limit: 10  //一页显示10条数据
+                , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据，res为从url中get到的数据
+                    if (res.success) {
+                        var code = 0;
+                    } else {
+                        var code = res.code;
+                    }
+                    var resData = JSON.parse(res.data);
+                    var result;
+                    if (this.page.curr) {
+                        result = resData.Data.slice(this.limit * (this.page.curr - 1), this.limit * this.page.curr);
+                    }
+                    else {
+                        result = resData.Data.slice(0, this.limit);
+                    }
+                    return {
+                        "code": code, //解析接口状态
+                        "msg": res.msg, //解析提示文本
+                        "count": resData.Data.length, //解析数据长度
+                        "data": result //解析数据列表
+                    };
+                }
+                , done: function (res) {
+                    //layer.close(index);
+                    $('th').css({ 'background-color': '#bdccea', 'color': 'black', 'font-weight': 'bold' });
+                    $('layui-table-total.layui-table tbody tr').css({ 'color': 'red' });
+                    $('.layui-table-total.layui-table tbody tr').css({ 'background-color': '#ffffb4' });
+                    $('.layui-table-tool').css({ 'padding': '5px 15px' });
+                    $('.layui-table,.layui-table-view').css({ 'padding': '0px', 'margin': '0px' });
+                    $('.layui-table tr,.layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, [lay-skin=line].layui-table, [lay-skin=row].layui-table').css({ 'border-color': '#ddd' });
+                    $('.layui-table-cell').css({ 'height': '25px', 'height-line': '25px' });
+                    var that = this.elem.next(); res.data.forEach(function (item, index) {
+                        if (index % 2 == 0) {
+                            var tr = that.find(".layui-table-box tbody tr[data-index='" + index + "']").css({ 'background-color': '#ecedff' }).addClass('addclass');
+                        } else {
+                            var tr = that.find(".layui-table-box tbody tr[data-index='" + index + "']").css('background-color', '#E0EEF6').addClass('addclass');
+                        }
+                    });
+                    //table.render(this);
+                    //soulTable.render(this);
+                }
+            });
+
+            //监听列工具条toolbar: '#bar'
+            table.on('tool(layList)', function (obj) {
+                var data = obj.data; //获得当前行数据
+                switch (obj.event) {
+                    case 'edtRole':
+                        var that = this;
+                        //多窗口模式，层叠置顶
+                        layer.open({
+                            //type: 2 //此处以iframe举例
+                            type: 2
+                            , title: '添加机构信息'
+                            , area: ['690px', '460px']
+                            , skin: 'layui-layer-lan'
+                            , shade: 0.5
+                            , maxmin: true
+                            , offset: "auto"
+                            , content: '/SysManager/Role/SetRoleInfo' //指定html
+                            //, content: $('#roleform')//指定dom type不能为iframe等，只能为0、1
+                            //, btn: ['确定'] //只是为了演示
+                            , yes: function (index, layero) {
+                                var body = layer.getChildFrame('body', index);
+                                var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
+                                //console.log(body.html()) //得到iframe页的body内容
+                                //var data1 = iframeWin.getfrom();
+                                console.log(iframeWin.layui.form.val('example'));   //这里只有layui 2.5.5的时候可以取到值
+                                layer.closeAll();
+                            }
+                            , zIndex: layer.zIndex //重点1
+                            , success: function (layero, index) {
+                                var body = layer.getChildFrame('body', index);
+                                var iframeWin = window[layero.find('iframe')[0]['name']];
+                                //body.find("#username")[0].value='Hi，我是从父页来的';
+                                var dd = {
+                                    "password": "123456"
+                                    , "interest": 1
+                                    , "like[write]": true //复选框选中状态
+                                    , "close": true //开关状态
+                                    , "sex": "女"
+                                    , "desc": "我爱 layui"
+                                };
+                                iframeWin.loadfrom(dd);
+                            }
+                        });
+                        break;
+                    default:
+                        break;
+                }
+
+            });
+
+            //查询工具栏: toolbar；table的lay-filter:layList
+            table.on('toolbar(layList)', function (obj) {
+                if (obj.event === 'reload') {
+                    var type = $(this).data('type');
+                    active[type] && active[type].call(this);
+                }
+                if (obj.event === 'addRole') {
+                    alert('add');
+                }
+            });
+
+            var $ = layui.$,
+                active = {
+                    reload: function () {
+                        var roleName = $("#rolename").val();
+                        //执行重载
+                        table.reload('roleTable', {
+                            url: '/SysManager/Role/GetRolesByName',
+                            page: {
+                                curr: 1
+                            },
+                            where: {
+                                'name': roleName
+                            }
+                        });
+                    },
+                    getCheckData: function () { //获取选中数据
+                        var checkStatus = table.checkStatus('roleTable'),
+                            data = checkStatus.data;
+                        layer.alert(JSON.stringify(data));
+                    },
+                    getCheckLength: function () { //获取选中数目
+                        var checkStatus = table.checkStatus('roleTable'),
+                            data = checkStatus.data;
+                        layer.msg('选中了：' + data.length + ' 个');
+                    },
+                    isAll: function () { //验证是否全选
+                        var checkStatus = table.checkStatus('roleTable');
+                        layer.msg(checkStatus.isAll ? '全选' : '未全选')
+                    }
+
+                };
+        });
+    </script>
+</body>
+
+</html>

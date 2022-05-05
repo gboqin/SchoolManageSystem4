@@ -1,0 +1,217 @@
+﻿@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>校园管理系统</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.min.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/lib/vue/vue.min.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/lib/vue-resource/vue-resource.min.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/js/Login.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/css/SysCSS/Login.css")" />
+</head>
+<body>
+    <div id="app" class="wrap">
+        <img src="@Url.Content("../images/back.jpeg")" class="imgStyle" />
+        <div class="loginForm">
+            <form>
+                <div class="logoHead">
+                    <h2 style="text-align:center">用户登录</h2>
+                    @*<button>{{loginParam.Uuid}}</button>*@
+                </div>
+                <div class="usernameWrapDiv">
+                    <div class="usernameLabel">
+                        <label for="loginUserName">邮箱:</label>
+                    </div>
+                    <div class="usernameDiv">
+                        <i id="esufIcon" class="layui-icon layui-icon-username adminIcon"></i>
+                        <input id="loginUserName" class="layui-input adminInput" type="text"  v-model="loginParam.Email" placeholder="输入邮箱地址" v-on:blur="onblurEmail()" />
+                    </div>
+                </div>
+                <div class="usernameWrapDiv">
+                    <div class="usernameLabel">
+                        <label for="loginPassword">密码:</label>
+                    </div>
+                    <div class="passwordDiv">
+                        <i id="psufIcon" class="layui-icon layui-icon-password adminIcon"></i>
+                        <input id="loginPassword" class="layui-input adminInput" type="password" v-model="loginParam.Password" placeholder="输入密码" v-on:blur="onblurPassword()" />
+                    </div>
+                </div>
+                <div class="usernameWrapDiv">
+                    <div class="usernameLabel">
+                        <label for="loginCard">验证码:</label>
+                    </div>
+                    <div class="cardDiv">                       
+                        <i id="csufIcon" class="layui-icon layui-icon-vercode cardIcon"></i>
+                        <input id="loginCard" class="layui-input cardInput" type="text" maxlength="4" name="card" v-model="loginParam.Captcha" placeholder="输入验证码" v-on:blur="onblurCaptcha()" />
+                    </div>
+                    <div class="codeDiv">
+                        <input id="loginCode" class="layui-input codeInput" v-model="loginCode" type="button" v-on:click="createCode()" />
+                    </div>
+                </div>
+                <div class="usernameWrapDiv">
+                    <div class="submitDiv">
+                        <input id="loginBtn" type="button" class="submit layui-btn layui-btn-primary" value="登录" v-on:click="clickLogin()" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        layui.use(['layer'], function () {
+            var layer = layui.layer;
+        })
+        $(function () {
+            // 页面初始化生成验证码
+            window.onload = app.createCode();
+        });
+        //// 也可以用 JavaScript 直接调用方法
+        //app.createCode() // => 'Hello Vue.js!'
+        var app = new Vue({
+            el: "#app",
+            data: {
+                loginParam: { Email: '', Password: '', Uuid: 0, Captcha: '' },
+                loginCode:''
+            },
+            methods: {
+                // 生成验证码
+                createCode: function () {
+                    var code = "";
+                    // 验证码长度
+                    var codeLength = 4;
+                    // 验证码随机数
+                    var random = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                        'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+                    for (var i = 0; i < codeLength; i++) {
+                        // 随机数索引
+                        var index = Math.floor(Math.random() * 36);
+                        code += random[index];
+                    }
+                    this.loginCode = code;
+                },
+                onblurEmail: function () {
+                    var e = document.getElementById("esufIcon");
+                    //CheckEmail(this.loginParam.Email) ? e.style.color = "blue" : e.style.color = "red";
+                    if (this.loginParam.Email.trim() == '') {
+                        return;
+                    }
+
+                    if (CheckEmail(this.loginParam.Email)) {
+                        e.style.color = "green";
+                    } else {                     
+                        e.style.color = "red";
+                        /*layer.msg('请输入正确格式的邮箱！');*/
+                        layer.alert('请输入正确格式的邮箱！',{title: ['系统提示','font-size:18px;'],icon:5,time:3000});
+                    }
+                },
+                onblurPassword: function () {
+                    var e = document.getElementById("psufIcon");
+                    if (this.loginParam.Password.trim() == '') { return; }
+                    if (CheckPassword(this.loginParam.Password)) {
+                        e.style.color = "green";
+                    } else {                     
+                        e.style.color = "red";
+                        layer.alert('请输入正确格式的密码！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                    }
+                },
+                onblurCaptcha: function () {
+                    var e = document.getElementById("csufIcon");
+                    if (this.loginParam.Captcha.trim() == '') { return; }
+                    if (this.loginParam.Captcha == this.loginCode) {
+                        e.style.color = "green";
+                    } else {
+                        e.style.color = "red";
+                        layer.alert('输入的验证码有误！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                    }
+                },
+                // 点击登录时做的校验
+                clickLogin: function () {
+                    if (this.loginParam.Email.trim()=='') {
+                        layer.alert('请输入邮箱！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                        return;
+                    }
+                    if (!CheckEmail(this.loginParam.Email)) {
+                        layer.alert('请输入正确格式的邮箱！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                        return;
+                    }
+                    if (this.loginParam.Password.trim() == '') {
+                        layer.alert('请输入用户密码！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                        return;
+                    } else {
+                        if (!CheckPassword(this.loginParam.Password)) {
+                            layer.alert('请输入正确格式的密码！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                        }
+                    }
+                    if (this.loginParam.Captcha) {
+                        if (this.loginParam.Captcha != this.loginCode) {
+                            layer.alert('请输入正确的验证码！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                            return;
+                        }
+                    } else {
+                        // 输入为空
+                        layer.alert('请输入验证码！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                        return;
+                    }
+                    this.login();
+                },// 登录
+                login: function () {
+                    // 请求登录接口
+                    //var turnUrl = '/Login/Index';
+                    var url = "/Login/LoginNoVCode";
+                    //post 发送数据到后端，需要第三个参数 {emulateJSON:true}。
+                    //emulateJSON 的作用： 如果Web服务器无法处理编码为 application / json 的请求，
+                    //你可以启用 emulateJSON 选项。
+                    //this.$http.post("/Login/Login", this.loginParam, { emulateJSON: true }
+
+                    var loading = layer.load(0);
+
+                    this.$http.get(url, { params: this.loginParam }
+                    ).then(function (res) {
+                        var result = res.body;
+                        if (result.success) {
+                            layer.close(loading);
+                            //if (result.data.data.roleList.includes("System")) {
+                            if (result.data.data.roleList.indexOf("System") > -1) {
+                                window.location = '/SysManager/SysManager/Index';
+                            } else {
+                                window.location = '/Home/Index';
+                            }
+
+                        } else {
+                            layer.close(loading);
+                            layer.alert(result.message, { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                            //window.location = turnUrl;
+                        }
+                    }, function (e) {
+                        layer.close(loading);
+                        layer.alert('登录异常！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                    });
+                }
+            },
+            beforeCreate: function () {
+                /*alert("创建前");*/
+            },
+            created: function () {
+                /*alert("创建完成");*/
+            },
+            beforeMount: function () {
+                /*alert("挂载前");*/
+            },
+            mounted: function () {
+               /* alert("挂载完成");*/
+            },
+            beforeUpdate: function () {
+                /* alert("即将更新渲染");*/
+            },
+            update: function () {
+                /* alert("更新成功");*/
+            }
+        });
+    </script>
+</body>
+</html>

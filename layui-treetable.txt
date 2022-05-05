@@ -1,0 +1,10 @@
+layui官网是没有treetable这一块的，所以需要先下载treetable的js和css插件。
+
+引入
+
+js和css是自己引入的，所以需要引入一下路径
+layui.config({
+	base : 'static/layui/' //代码的相对路径，自行修改
+}).extend({
+	treetable : 'treetable-lay/treetable',
+});

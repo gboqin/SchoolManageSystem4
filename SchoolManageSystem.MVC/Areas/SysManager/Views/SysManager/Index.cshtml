@@ -1,0 +1,326 @@
+﻿@{ 
+    Layout = null;
+
+}
+<!Doctype>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>校园后台管理系统</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.min.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/lib/vue/vue.min.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/lib/vue-resource/vue-resource.min.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+    <style>
+        .layui-tab-item {
+            height: 100%;
+            width: 100%;
+        }
+        .layui-show {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="layui-layout-body">
+    <div class="layui-layout layui-layout-admin" id="app">
+        <!--头部-->
+        <div class="layui-header">
+            <div class="layui-logo"><img src="@Url.Content("../../../../images/logo.jpeg")" class="layui-nav-img">校园后台管理系统</div>
+            <!--头部左端-->
+            <ul class="layui-nav layui-layout-left">
+                <li class="layui-nav-item">
+                    <a href="javascript:void(0)" rel="external nofollow">其它系统</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="@Url.Action("Index","Home")" rel="external nofollow">校园管理系统</a></dd>
+                    </dl>
+                </li>
+            </ul>
+            <!--头部右端-->
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:void(0)"><img src="@Url.Content("../../../../images/avatar4.png")" class="layui-nav-img">hello先生</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="@Url.Action("LogOut","Login")"><i class="layui-icon layui-icon-logout"></i>注销</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+
+        <!--左侧-->
+        <div class="layui-side layui-bg-black">
+            <div class="layui-side-scroll">
+                <ul id="navBarId" class="layui-nav layui-nav-tree" lay-filter="test">
+                </ul>
+            </div>
+        </div>
+
+        <!--中间主体-->
+        <div class="layui-body" id="container">
+            @*<img style="width: 100%; height: 100%; position: absolute; opacity: 0.05;" src="@Url.Content("../../../../images/main.jpeg")" />*@
+            <div class="layui-tab" lay-filter="tabs" lay-allowClose="true">
+                <ul class="layui-tab-title">
+                    <li class="layui-this">欢迎</li>
+                </ul>
+                <div class="layui-tab-content" style="padding:0">
+                    <div class="layui-tab-item layui-show">
+                        <img style="width: 100%; height: 100%;" src="@Url.Content("../../../../images/welcome.png")" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--底部-->
+        <div class="layui-footer" style="background-color:lightsteelblue">
+            <center>版权所有&copy;Tel:1860000000</center>
+        </div>
+    </div>
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script type="text/javascript">
+        //$(function () {
+        //    // 页面初始化获取tree数据
+        //    window.onload = app.getLeftMenus();         
+        //});
+
+        $(window).resize(function () {
+            FrameWH();
+        });
+
+        //JavaScript代码区域
+        layui.use(['util','layer', 'element'], function () {
+            //var util = layui.util;
+            var element = layui.element;
+            var layer = layui.layer;
+            var $ = layui.jquery;
+
+            /*在layui框架下，对于新产生的<a>使用onclick 事件是无法出发的。
+             * 后来我找到了在layui官方演示上，找到了一个解决方法——批量处理事件
+             '<a data-url="' + data[i].Url +'" data-id="index" data-title="index" class="site-demo-active" href="javascript:;" lay-active="testAdd">'+ data[i].Name + '</a>'
+             var active= util.event('lay-active', {
+                testAdd:function(){alert("test");}
+             });
+             * */
+            var active= {
+                //触发事件
+                //在这里给active绑定几项事件，后面可通过active调用这些事件
+                tabAdd: function (url, id, name) {
+                    //新增一个Tab项 传入三个参数，分别对应其标题，tab页面的地址，还有一个规定的id，是标签中data-id的属性值
+                    //关于tabAdd的方法所传入的参数可看layui的开发文档中基础方法部分
+                    //由于菜单有父菜单、子菜单，父菜单不用开启Tab,子菜单开启,故父不设id。
+                    if (id) {
+                        //url='/../..'
+                        element.tabAdd('tabs', {
+                            title: name,
+                            content: '<iframe data-frameid="' + id + '" scrolling="no" frameborder="0" src="' + url + '" style="width:100%;height:100%"></iframe>',
+                            id: id //规定好的id
+                        })
+                            element.render('tab');
+                    }
+                },
+                tabChange: function (id) {
+                    //切换到指定Tab项
+                    if (id) {
+                        element.tabChange('tabs', id); //根据传入的id传入到指定的tab项
+                    }
+                },
+                tabDelete: function (id) {
+                    if (id) {
+                        element.tabDelete("tabs", id);//删除
+                    }
+                }
+                , tabDeleteAll: function (ids) {//删除所有
+                    $.each(ids, function (i, item) {
+                        element.tabDelete("tabs", item); //ids是一个数组，里面存放了多个id，调用tabDelete方法分别删除
+                    })
+                }
+            };
+
+            //注：动态生成监听事件失效，只能用下面
+            //即左侧菜单栏中内容 ，触发点击事件
+            element.on('nav(test)', function (elem) {
+                var dataid = $(this);
+
+                //这时会判断右侧.layui-tab-title属性下的有lay-id属性的li的数目，即已经打开的tab项数目
+                if ($(".layui-tab-title li[lay-id]").length <= 0) {
+                    //如果比零小，则直接打开新的tab项
+                    active.tabAdd(dataid.attr("data-url"), dataid.attr("data-id"), dataid.attr("data-title"));
+                } else {
+                    //否则判断该tab项是否以及存在
+
+                    var isData = false; //初始化一个标志，为false说明未打开该tab项 为true则说明已有
+                    $.each($(".layui-tab-title li[lay-id]"), function () {
+                        //如果点击左侧菜单栏所传入的id 在右侧tab项中的lay-id属性可以找到，则说明该tab项已经打开
+                        if ($(this).attr("lay-id") == dataid.attr("data-id")) {
+                            isData = true;
+                        }
+                    })
+                    if (isData == false) {
+                        //标志为false 新增一个tab项
+                        active.tabAdd(dataid.attr("data-url"), dataid.attr("data-id"), dataid.attr("data-title"));
+                    }
+                }
+                //最后不管是否新增tab，最后都转到要打开的选项页面上
+                active.tabChange(dataid.attr("data-id"));
+                FrameWH();
+            });
+
+            //获取所有的菜单
+            $.ajax({
+                type: 'GET',
+                url: '/SysManager/SysManager/GetLeftMenu',
+                dataType: "json",
+                success: function (res) {
+                    var result = JSON.parse(res.data);
+                    //设置vue.data，题外
+                    app.$data.leftMenus = result.Data;
+
+                    var data = result.Data;
+                    var liStr = '';
+                    for (var i = 0; i < data.length; i++) {
+                        var content = '<li class="layui-nav-item">';
+                        if (data[i].ChildMenus != null && data[i].ChildMenus.length > 0) {
+                            content += '<a href="javascript:;">' + data[i].Name + '</a>';
+                        } else {
+                            //content += '<a data-url="' + data[i].Url +'" data-id="index" data-title="index" class="site-demo-active" href="javascript:;" lay-active="tabAdd">'+ data[i].Name + '</a>';
+                            content += '<a data-url="' + data[i].Url + '" data-id="' + data[i].PermissionCode + '" data-title="' + data[i].Name + '"  href="javascript:;" >' + data[i].Name + '</a>';
+                        }
+                        //这里是添加所有的子菜单
+                        content += getChildMenu(data[i],0);
+                        content += '</li>';
+
+                        liStr += content;
+                    }
+                    //$("#navBarId").html('<ul class="layui-nav layui-nav-tree"  lay-filter="test">' + liStr + '</ul>');
+                    $(".layui-nav-tree").append(liStr);
+                    //初始化，动态生成一定要加上，否显示不了。
+                    element.init();
+                },
+                error: function (jqXHR) {
+                    aler("发生错误：" + jqXHR.status);
+                }
+            });
+
+            function FrameWH() {
+                undefined
+                var h = $(window).height() - 145;
+                $("iframe").css("height", h + "px");
+            };
+        });
+
+        //组装子菜单的方法
+        function getChildMenu(subMenu, num) {
+            num++;
+            var menuCell = 5;
+            if (subMenu == null) {
+                return;
+            }
+
+            var content = '';
+            if (subMenu.ChildMenus != null && subMenu.ChildMenus.length > 0) {
+                content += '<dl class="layui-nav-child">';
+            } else {
+                content += '<dl>';
+            }
+
+            if (subMenu.ChildMenus != null && subMenu.ChildMenus.length > 0) {
+
+                for (var j = 0; j < subMenu.ChildMenus.length; j++) {
+                    content += '<dd>';
+                    if (subMenu.ChildMenus[j].ChildMenus != null && subMenu.ChildMenus[j].ChildMenus.length > 0) {
+                        content += '<a style="margin-Left:' + num * menuCell + 'px" href="javascript:;">' + subMenu.ChildMenus[j].Name + '</a>';
+                    } else {
+                        content += '<a style="margin-Left:' + num * menuCell + 'px" data-url="' + subMenu.ChildMenus[j].Url + '" data-id="' + subMenu.ChildMenus[j].PermissionCode + '" data-title="' + subMenu.ChildMenus[j].Name + '"  href="javascript:;" >' + subMenu.ChildMenus[j].Name + '</a>';
+                    }
+                    
+                    if (subMenu.ChildMenus[j].ChildMenus != null && subMenu.ChildMenus[j].ChildMenus.length > 0) {
+                        content += this.getChildMenu(subMenu.ChildMenus[j],num);
+                    }
+                    content += '</dd>';
+                }
+                content += '</dl>';
+            }
+            return content;
+        }
+
+        var app = new Vue({
+            el: "#app",
+            data: {
+                leftMenus: []
+            },
+            methods: {
+                /*
+                getLeftMenus: function () {
+                    //alert(1);
+                    var url = '/SysManager/SysManager/GetLeftMenu';
+                    this.$http.get(url).then(function (res) {
+                        var result = res.body;
+                        if (result.success) {
+                            //此时的result.data带有转义符，要转换成JSON
+                            
+                            var red = JSON.parse(result.data);
+                            this.leftMenus = red;
+                            //alert(JSON.stringify(this.leftMenus));
+                            //alert(JSON.stringify(this.leftMenus.Data[0].Name));
+                        } else {
+                            layer.alert(result.message, { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                        }
+                    }, function (e) {
+                        layer.alert('登录异常！', { title: ['系统提示', 'font-size:18px;'], icon: 5, time: 3000 });
+                    });
+                }
+                ,printMenus: function () {
+                    alert(JSON.stringify(this.leftMenus));
+                }
+                ,createNarMenus: function () {
+                    var liStr = "";
+                    var data = this.leftMenus.Data;
+
+                    for (var i = 0; i < data.length; i++)
+                    {
+                        var content = '<li class="layui-nav-item">';
+                        content += '<a href="javascript:;">' + data[i].Name + '</a>';
+                        //这里是添加所有的子菜单
+                        content += this.getChildMenu(data[i]);
+                        content += '</li>';
+                        
+                        liStr += content;
+                    }
+                    //alert(liStr)
+                    $("#navBarId").html('<ul class="layui-nav layui-nav-tree"  lay-filter="test">' + liStr + '</ul>');
+                }
+                ,getChildMenu: function (subMenu) {
+                    if (subMenu == null) {
+                        return;
+                    }
+
+                    var content = '';
+                    if (subMenu.ChildMenus != null && subMenu.ChildMenus.length > 0) {
+                        content += '<dl class="layui-nav-child">';
+                    } else {
+                        content += '<dl>';
+                    }
+
+                    if (subMenu.ChildMenus != null && subMenu.ChildMenus.length > 0) {
+                        
+                        for (var j = 0; j < subMenu.ChildMenus.length; j++) {
+                            content += '<dd>';
+                            content += '<a href="javascript:;">' + subMenu.ChildMenus[j].Name + '</a>';
+                            if (subMenu.ChildMenus[j].ChildMenus != null && subMenu.ChildMenus[j].ChildMenus.length > 0) {
+                                content += this.getChildMenu(subMenu.ChildMenus[j]);
+                            }                            
+                            content += '</dd>';
+                        }
+                        content += '</dl>';
+                    }
+                    return content;
+                }
+                */
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,482 @@
+一 搭构项目框架的骨架
+（1） Infrastructure层
+  1.Baisc主要存放一些通用方法，底层常用数组、错误异常、扩展方法、中间件、帮助类、ID生成、
+  统一返回、加密等的类。
+（2）Domain层 
+  1.Entities存放CodeFrist中的数据库模型；
+    安装了EntityFrameworkCode；
+    引用项目Baisc。
+  2.IRepositorys存放仓储接口；
+    安装了EntityFrameworkCode；
+    引用项目Entities。
+  3.Repositorys存放仓储类、DbContext类、数据初始化；
+    安装EntityFramework.sqlserver；
+    引用项目Entities、IRepositorys。
+（3）Application层
+  1.Common存放Autofac、Controller、Filter、Log、AutoMapper、Cache、JWT等组件，以及全局系统数据类(GlobalSystemWeb)；
+    安装了Autofac、EntityFramework.sqlserver、NLog、Redis、Jwt
+    引用项目Dto、Repositorys、Services
+  2.Dto存放客户端数据类，用于与数据库交互，将数据返回给业务层处理
+  3.IServices存放业务处理接口
+    引用项目Dto
+  4.Services存放业务处理层
+    安装了AutoMapper
+    引用项目Repositorys、IServices
+（4）Presentaion层
+  1启动程序，主要的一些配置都在该类库中的Startup中进行配置
+
+
+二 Autofac解耦
+（1）在Application中通过nuget安装两个Package：Autofac、Autofac.Extensions.DependencyInjection
+（2）在Application中Autofac文件夹添加自定义CustomAutofacModule类，一定要引用被注入的项目(Repositorys/Services)
+（3）在Api的Setup文件中添加autofac的DI配置容器
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            // 直接用Autofac注册我们自定义的 
+            builder.RegisterModule(new CustomAutofacModule());
+        }
+（4）在Api的Program文件中添加替换原生DI
+            Host.CreateDefaultBuilder(args)
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory()) //替换原生DI 使用autofac
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
+(5) 在Api的Startup中Configure(推迟到创建GlobalSystemWeb)
+            GlobalSystemWeb.AutofacContainer = app.ApplicationServices.CreateScope().ServiceProvider.GetAutofacRoot();
+
+            //GlobalSystemWeb.Configure(app.ApplicationServices.GetRequiredService<IHttpContextAccessor>());
+            using (var container = GlobalSystemWeb.AutofacContainer.BeginLifetimeScope())
+            {
+                GlobalSystemWeb.Configure(container.Resolve<IHttpContextAccessor>());
+            }
+
+三 IEntity/DbContext/Code Frist/Basic中静态扩展方法、数组、公共助手、统一后端返回数据模型
+（1）在Entities(nuget EntityFrameworkCore)中添加Core文件夹，并新建IEntity接口、Entity、BaseEntity、BaseEntityNoDeleted虚拟类
+（2）在Entities中CodeFirst各个实体表的类，其间会在Basic中添加各种数组、CommonHelper助手类
+（3）在Repositorys(nuget EntityFrameworkCore.sql)中添加Database文件夹，新建自动注册模型实体类Configuration及DbContext数据库上下文
+     在Baseic中添加Extensions（并添加各种扩展）、IDCode(id生成器)、Security(加密)文件夹
+（4）在Basic中添加系统错误异常的静态扩展CustomSystemException
+（5）在Basic中统一后端返回数据模型：新建自定义返回模型类 ResponseResult，新建自定义返回给前端的Json结果数据类 CustomJsonResult，
+     新建自定义返回给前端的Json结果数据类（包含HTTP状态码） CustomHttpStatusCodeResult
+
+四 仓储模式及初始化数据库
+（1）在IRepositorys中添加Collections文件夹，添加分页接口IPagedList、数据的分页类PagedList、
+     给<see cref="IEnumerable{T}"/>添加扩展方法来支持分页IEnumerablePagedListExtensions、
+     给<see cref="IQueryable{T}"/>添加扩展方法来支持分页IQueryablePageListExtensions
+（2）在IRepositorys中添加通用仓储接口IRepository
+（3）在IRepositorys中添加工作单元接口IUnitOfWork
+（4）在Repositorys中添加通用仓储的默认实现类Repository
+（5）在Repositorys中添加工作单元的默认实现UnitOfWork
+（6）在Repositorys中在 <see cref="IServiceCollection"/>中安装工作单元依赖注入的扩展方法UnitOfWorkServiceExtensions
+（7）在Api的Setup文件中ConfigureServices方法添加
+            //注册工作单元（同时注册了DBContext）
+            services.AddUnitOfWorkService<SchoolDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("SqlServerConnection")));
+（8）在Repositorysr的Database中添加SeedData.Ini及SeedData初始化数据，在Api的Program文件中更改
+                    //初始化数据库
+                    SeedData.Initialize(scope.ServiceProvider.GetRequiredService<IUnitOfWork<SchoolDbContext>>());
+
+五 Nlog记录日志至数据库
+（1）在Common的NuGet中安装NLog、NLog.Web.AspNetCore包
+（2）在Common中自定义注册类NLogExtensions(手动添加引用using Microsoft.Extensions.Logging;)及自定义实例化LogHelper类
+（3）在Api中添加NLog.config配置文件及安装System.Data.SqlClient包
+（4）在Api的Program更改
+        public static void Main(string[] args)
+        {
+            CreateHostBuilder(args).Build().Run();
+            try
+            {
+                var host = CreateHostBuilder(args).Build();
+                using (IServiceScope scope = host.Services.CreateScope())
+                {
+                    //确保NLog.config中连接字符串与appsettings.json中同步
+                    //NLogExtensions.EnsureNlogConfig("NLog.config", "SQLServer", scope.ServiceProvider.GetRequiredService<IConfiguration>().GetSection("ConnectionStrings:SqlServerConnection").Value);
+                    NLogExtensions.NlogConfig("NLog.config");
+                    //初始化数据库
+                    DBSeed.Initialize(scope.ServiceProvider.GetRequiredService<IUnitOfWork<SchoolDbContext>>());
+                }
+                host.Run();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Logger.Error(ex.Message);
+                throw;
+            }
+        }
+
+    .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                }).AddNlogService();//替换原生的Log
+
+六 全局异常处理(在系统出现未捕捉的异常时进行全局处理并记录以方便修复)
+（1）Basics已经自定义了异常类CustomSystemException
+（2）在Common中自定义全局异常处理过滤器ExceptionFilter，继承ExceptionFilterAttribute来重写当触发时的事件
+（3）在Common中自定义系统全局变量，系统数据类GlobalSystemWeb
+（4）在Startup类中的ConfigureServices方法中做如下更改
+            services.AddMvc(options =>
+            {
+                options.MaxModelValidationErrors = 5;//验证错误最大个数
+                //options.AllowValidatingTopLevelNodes = true;//是否允许验证顶级节点  接口方法参数
+                options.Filters.Add(new ExceptionFilter());//添加异常处理过滤器
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+
+            services.AddControllers();
+
+七 使用过滤器进行全局请求数据验证
+（1）在Dto的CusEntity中添加TestValidModel测试model，用来测试。
+（2）在Dto的CusEntity中添加ClassicTestEqualAttribute自定义特性,验证字段值是否等于内置值。
+（3）在Api中 Startup 类中进行了限制，使验证错误最大个数只有五个
+            services.AddMvc(options =>
+            {
+                options.MaxModelValidationErrors = 5;//验证错误最大个数
+                options.Filters.Add(new ExceptionFilter());//添加异常处理过滤器
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+（4）使用过滤器来进行全局的请求模型验证，在Common的Filters中添加模型验证的方法ModelValid，继承 ActionFilterAttribute 属性。
+（5）将该模型验证的过滤器属性添加到基类控制器 BaseController 上，因为每个控制器都会继承该控制器，
+     而这个模型验证过滤器会在每次请求时触发。
+    [ModelValid]
+    public abstract class BaseController : Controller
+
+八 AutoMapper使用
+（1）在Common中Nuget安装AutoMapper/AutoMapper.Extensions.Microsoft.DependencyInjection/Autofac
+（2）在Common的AutoMapper添加AutoMapperProfiles，设置Entity->Dto关系
+（3）在Api的Setup中ConfigureServices方法添加AutoMapper注册
+        services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+
+九 MemoryCache与redis缓存的使用，方便将用户数据缓存到服务器上在需要的时候快速取出使用与验证
+（1）Memcached的使用
+   1 创建 MemoryCache 来封装些缓存的简单方法
+   2 为了方便使用，再建一个缓存类别的中间类来管理 UserCache。
+   3 首先在 Startup 类中做以下更改，添加缓存参数，赋值给外部类来方便使用
+     public void ConfigureServices(IServiceCollection services)
+     { 
+        ...
+        //注册缓存
+　　    services.AddMemoryCache();
+        ...
+     }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IMemoryCache memoryCache)
+    {
+        ...
+        GlobalSystemWeb.MemoryCache = memoryCache;
+        ...
+    }
+
+  4 使用
+          [HttpGet]
+        [Route("mecache")]
+        public ActionResult ValidToken()
+        {
+            var key = "tkey";
+            UserCache.Set(key, "测试数据");
+            return Succeed(UserCache.Get(key));
+        } 
+（2）如何使用 Redis 缓存
+  1 Nuget 包中添加  StackExchange.Redis  依赖
+  2 在Common的Redis添加RedisConfig、Redis 连接类RedisConnectionFactory、添加Redis客户端类RedisClient
+  3 在Api中配置文件 appsettings.json 如
+    "Redis": {
+    "ConnectionString": "127.0.0.1:6379",
+    "Pwd": "",
+    "DefaultDatabase": 0
+  }
+  4 在Common的UserCache
+  5 启动 redis-server.exe 程序
+  6 使用
+          /// <summary>
+        /// 测试 redis 存储 获取
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("rediscache")/*,Obsolete*/]
+        public ActionResult RedisCacheTest()
+        {
+            var key = "redisTest";
+            RedisCache.Set(key, "测试123", new TimeSpan(0, 2, 0));
+            return Succeed(RedisCache.Get<string>(key));
+        }
+
+十 使用JWT生成Token
+（1）在Common中NuGet包管理中添加： System.IdentityModel.Tokens.Jwt
+（2）在Common的JWT中添加TokenManager类、在Dto中CusEntitys添加UserDto、MenuDto，SystemBo添加UserCacheBo，添加UserManager用户处理类。
+（3）在Basics中Config文件夹中添加CacheKeys(缓存前缀)、SysConstants(登录token验证结果)两个类
+（4）在Common的Filter文件夹中添加AuthorizationFilter权限过淲类，在BaseUserController引用
+    [AuthorizationFilter]
+    public abstract class BaseUserController : BaseController
+（5）在Common的Controllers中新建 BaseUserController 来继承 BaseController。
+（6）在Controllers添加token测试代码，TokenTestController
+
+var token = GlobalSystemWeb.HttpContext.Request.Headers["token"];访问请求要添加token头部文件变量
+//var token1 = GlobalSystemWeb.HttpContext.Request.Headers["Authorization"]; Authorization中添加Bearer Token
+
+十一 在.NET CORE中，官方推荐用策略去实现授权。
+策略授权，是在授权中间件环节执行，
+当然能解决上述执行流程先后顺序的问题。但如果要直接应用于我们业务系统中的权限控制，
+恐怕远远不够，因为你不可能为每个api用例创建一个角色或策略，更主要的，
+权限控制还要动态授予或回收的，不做扩展直接照搬，你是很难搞的。
+(1) 在Common的Filter文件夹中添加PermissionCacheFilterAttribute（权限验证），重写OnActionExecuting。
+    1.1->UserManager.CurrentUser(获取当前用户),返回的UserCacheBo类
+      1.1.1->get->GetCurrentUser(获取已登录用户缓存) 
+        UserCache.Get()//先从内存获取，再从redis获取
+      1.1.2->set->UserCache.CreateUserCache //创建缓存登录用户缓存
+    1.2->是否存在用户，否throw一个错误
+    1.3->检测用户特性是否包含指定的权限
+            if (Codes == null || Codes.Length == 0)
+                return;
+            var codes = new List<String>(Codes);
+            //是否有交集
+            if (user.MenuCodeList.Intersect(codes).Count() > 0)
+            {
+                return;
+            }
+(2) 在Api中WeatherForecastController的Get方法前启用[PermissionCacheFilter("M301")]
+
+十二 net core 3.1 webapi解决跨域(CORS)
+  ASP.NET Core 应用中启用 CORS
+  浏览器安全性可防止网页向不处理网页的域发送请求。 此限制称为同域策略。 
+  同域策略可防止恶意站点从另一站点读取敏感数据。 有时，你可能希望允许其他网站向自己的应用发出跨源请求
+
+  
+如果两个 URL 具有相同的方案、主机和端口 (RFC 6454)，则它们同源。
+
+这两个 URL 同源：
+https://example.com/foo.html
+https://example.com/bar.html
+
+这些 URL 的源与前两个 URL 不同：
+https://example.net：不同的域
+https://www.example.com/foo.html：不同的子域
+http://example.com/foo.html：不同的方案
+https://example.com:9000/foo.html：不同的端口
+
+(1) 在api的Startup，将策略名称设置为 _myAllowSpecificOrigins。 策略名称是任意的
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+(2) 在api的Startup的ConfigureServices方法中配置Cors
+            //配置Cors
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                                  builder =>
+                                  {
+                                      builder.WithOrigins("http://example.com",
+                                                          "http://www.contoso.com");
+                                  });
+                /*                      
+                builder.WithOrigins(corsUrl)
+                .WithMethods("PUT", "DELETE", "GET","POST","PATCH")
+                .SetIsOriginAllowed((host) => true)
+                        .AllowAnyMethod()
+                        .AllowCredentials()
+                        .AllowAnyHeader(); 
+                 */
+            });
+
+            services.AddControllers();
+
+(3)在api的Startup的Configure方法中允许跨域(去掉后，IE可以用、Edge\Google不能调用)
+   //这样Edge\Google读取不了Hearders
+   //app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("Content-Disposition"));
+   app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+   app.UseRouting();
+  
+(4)在api的Startup的Configure方法中注册跨域
+   app.UseCors(MyAllowSpecificOrigins);
+   app.UseAuthorization();
+
+(5)通过ajax在html中调用，_Layout.cshtml
+    <script type="text/javascript">
+        var token = "qq";
+        var uid = "2";
+        function TestCorsOnClick() {
+            alert(11);
+            $.ajax({
+                method: "get",
+                url: "http://localhost:36774/api/user/login",
+                dateType: "json",
+                contentType: "application/json",
+                async: false,//取消同步，才可以为token赋值
+                success: function (data, textStatus, request) {
+                    alert(JSON.stringify(data));
+                    var token2 = request.getResponseHeader("token");
+                    var uid2 = request.getResponseHeader("uid");
+                    token = token2;
+                    uid = uid2;
+                },
+                error: function (e) {
+                    alert("登录失败:" + JSON.stringify(e));
+                }
+            });
+            alert(token);
+            $.ajax({
+                method: "get",
+                url: "http://localhost:36774/WeatherForecast",
+                dateType: "json",
+                contentType: "application/json",
+                //async: false,//取消同步，才可以为token赋值
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "uid": uid
+                },
+                success: function (data, textStatus, request) {
+                    alert(JSON.stringify(data));
+                },
+                error: function (e) {
+                    alert("登录失败:" + JSON.stringify(e));
+                }
+            });
+        }
+    </script>
+
+(6)通过HttpClient在后台调用
+       public async Task  GetUser()
+        {
+            ResponseResult<UserDto> user;
+            string uid="";
+            string token="";
+            var client = new HttpClient();
+            client.BaseAddress = new System.Uri("http://localhost:36774");
+            var response = await client.GetAsync($"/api/user/login");
+            var _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                user = JsonSerializer.Deserialize<ResponseResult<UserDto>>(content, _options);
+                token = response.Headers.GetValues("token").FirstOrDefault();
+                uid = response.Headers.GetValues("uid").FirstOrDefault();
+                Console.WriteLine(token);
+            }
+            else
+            {
+                Console.WriteLine(response.StatusCode);
+                Console.WriteLine(await response.Content.ReadAsStringAsync());
+            }
+
+            var client2 = new HttpClient();
+            client2.BaseAddress = new System.Uri("http://localhost:36774");
+            client2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            client2.DefaultRequestHeaders.Add("uid", uid);
+            var response2 = await client2.GetAsync($"/WeatherForecast");
+            var _options2 = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            if (response2.IsSuccessStatusCode)
+            {
+                var content2 = await response2.Content.ReadAsStringAsync();
+                var user2 = JsonSerializer.Deserialize<List<WeatherForecast>>(content2, _options2);
+            }
+            else
+            {
+                Console.WriteLine(response2.StatusCode);
+                Console.WriteLine(await response2.Content.ReadAsStringAsync());
+            }
+        }
+
+
+十三 net core 3.1使用Session
+
+1 nuget安装Microsoft.AspNetCore.Session
+2 若要启用会话中间件Session，在Startup 的ConfigureServices 中 AddSession 的调用
+        services.AddSession(options =>
+        {
+            options.IdleTimeout = TimeSpan.FromSeconds(10);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.IsEssential = true;
+        });
+
+        services.AddControllersWithViews();
+3 对 Startup的Configure 中 UseSession 的调用
+            app.UseAuthorization();
+
+            app.UseSession();
+4 在Controller中用HttpContext.Session.GetString("key")获取session，
+用HttpContext.Session.SetString("key", "value")设置session（key和value都是字符串，
+文末链接有将对象转换为json字符串作为value，在读取后反序列化成对象的）
+
+
+十四 net core 3.1    Claims认证登录
+
+1 在Startup的ConfigureServices 添加认证配置
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            }).AddCookie(options =>
+            {
+                //cookie认证更多配置
+                options.Cookie.Name = "AuthCookie";//cookie名称
+                options.LoginPath = "/Login/Login";//登录路径
+                options.Cookie.HttpOnly = true;//cookie操作权限
+                //options.SessionStore = new MemoryCacheTicketStore();
+            });
+
+2 在Startup的Configure中启用验证
+            //验证你是谁，注意顺序，要放到UseAuthorization之前
+            app.UseAuthentication();
+
+            //是否允许访问
+            app.UseAuthorization();
+
+3 在LoginController中的Login添加Cookie用户信息
+
+                var claimIdentity = new ClaimsIdentity("Cookie");
+                claimIdentity.AddClaim(new Claim(ClaimTypes.Sid, lu.uid));
+                claimIdentity.AddClaim(new Claim(ClaimTypes.Authentication, lu.token));
+                var claimsPrincipal = new ClaimsPrincipal(claimIdentity);
+
+                await HttpContext.SignInAsync(claimsPrincipal);
+
+4 在HomeController处添加认证标识[Authorize]
+
+5 读取用户信息
+        public IActionResult Index()
+        {
+            //如果HttpContext.User.Identity.IsAuthenticated为true，
+            //或者HttpContext.User.Claims.Count()大于0表示用户已经登录
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                //这里通过 HttpContext.User.Claims 可以将我们在Login这个Action中存储到cookie中的所有
+                //claims键值对都读出来，比如我们刚才定义的UserName的值Wangdacui就在这里读取出来了
+                //var sid = HttpContext.User.Claims.First().Value;
+                var sid2 = User.FindFirst(ClaimTypes.Sid).Value;
+                var token = User.FindFirst(ClaimTypes.Authentication).Value;
+            }
+            return View();
+        }
+
+
+十五 策略授权(角色)
+
+1 在claims处添加 claimIdentity.AddClaim(new Claim(ClaimTypes.Role, "Admin"));
+  claimIdentity.AddClaim(new Claim(ClaimTypes.Authentication, lu.token));
+  claimIdentity.AddClaim(new Claim(ClaimTypes.Role, "Admin"));
+
+    //多个角色
+    user.Data.RoleList.ForEach(role => claimIdentity.AddClaim(new Claim(ClaimTypes.Role, role)));
+    [Authorize(Roles = "Admin,System")]
+2 在Startup的ConfigureServices方法添加基于角色和声明的自定义策略授权
+            // 基于角色和声明的自定义策略授权
+            services.AddAuthorization(option =>
+            {
+                option.AddPolicy("CustomPolicy", policy =>
+                {
+                    policy.RequireAssertion(context => context.User.IsInRole("Admin"));
+                });
+            });
+
+3 在HomeController处
+    //基本授权
+    //[Authorize]
+    //策略授权--自定义授权
+    //[Authorize(Policy = "AdminPolicy")]
+    //[Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+    [Authorize(Policy = "CustomPolicy")]
+
+
+十六 创建区域（Areas）
+
+1 选择网站项目，鼠标右键 “添加(D)”
+2 点击  “新搭建基架的项目(F)...”
+3 在弹出的窗口选择 “MVC区域” ，并在右下角点击 “添加”按钮
+4 输入自定义区域名称，（比如我这里填写：SysManager），点“添加”按钮完成创建
+5 最后还需要在 Startup.cs 文件中注册一下路由（ MapAreaControllerRoute 方法）

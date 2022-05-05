@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.3.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SchoolManageSystem.Repositorys\SchoolManageSystem.Repositorys.csproj" />
+    <ProjectReference Include="..\SchoolManageSystem.Services\SchoolManageSystem.Services.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,58 @@
+https://blog.csdn.net/xxdddail?type=blog
+
+https://blog.csdn.net/xxdddail/article/details/89876055
+vue对于web端的开发优势是很明显的，特别是单页应用，响应、数据等都很明显，而且开发效率也高，
+又有很多资料可查、有社区的支持。但vue对于开发较大的项目时，则会显得笨重，因为编译成了单页应用，
+非常臃肿，首次加载变的很慢。而且在使用VS来开发时，虽然VS可以创建vue的项目，但是基于node.js来编译的，
+不好操作，而且经常出现卡死现象，于是就考虑有没有其他的方式来应用vue。
+
+vue本质上是一个对UI的渲染，可以认为是view的渲染层，而emelent ui是基于vue的控件库，
+本上相关的js则可正常工作，对于网网请求可以通过vue-resource来达成，再加上asp.net构建的webapi来实现服务的请求，
+那么基本上是可以成型的，基于这样的思路，于是有了后面的开发实践。
+
+1 使用nuget安装vue、vue-resource、vue.js.element.ui
+
+
+https://blog.csdn.net/qq_34220236/article/details/91415314
+
+HttpClient httpClient = new HttpClient();
+httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+StringContent strcontent = new StringContent(JsonConvert.SerializeObject("aa"), Encoding.UTF8, "application/json");
+var message = new HttpRequestMessage(HttpMethod.Post, "your address");
+//设置cookie信息
+message.Headers.Add("Cookie", "token=" + token);
+//设置contetn
+message.Content = strcontent;
+//发送请求
+var httpResponseHeaders = httpClient.SendAsync(message).Result;
+
+client.PostAsync(apiURI, new StringContent(p.ToString(), Encoding.UTF8, "application/json") 
+
+
+https://blog.csdn.net/nmwwbreed/article/details/79886320
+
+https://www.cjavapy.com/article/159/
+
+环境：
+
+ vs2019 调试 razorpages项目
+
+问题：
+
+预览主页可以成功，访问/Movies页显示500.35错误
+
+（
+
+500.35 ANCM 同一进程内有多个进程内应用程序500.35 ANCM Multiple In-Process Applications in same Process
+）
+
+ 重现：调试-web服务器设置中修改应用url并调试后，出现该问题，怀疑是同一个项目两个url调试分别占用了两个进程导致的
+
+ 解决方案：
+
+
+1 删除整个.vs会报web无法连接iis错误；
+
+2 一定要先关闭解决方案再删除config文件；
+
+3 比较了正确的 applicationhost.config与错误的 applicationhost.config，发现错误的里面增加了一些配置
