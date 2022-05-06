@@ -41,7 +41,7 @@
                 elem: '#myTable',
                 id: 'roleTable',
                 title: '角色管理',
-                cellMinWidth: 40,
+                /*cellMinWidth: 40,*/  //自动分配宽度
                 toolbar: '#toolbar',
                 defaultToolbar: ["filter"],//去掉右则三个按钮["filter","exports","print"]
                 cols: [
@@ -54,27 +54,27 @@
                     }, {
                         field: 'Name',
                         title: '角色名称',
-                        Width: '80'
+                        width: '120'
                     }, {
                         field: 'RoleDesc',
                         title: '描述',
-                        Width: '80'
+                        minWidth: '150'
                     }, {
                         field: 'Num',
                         title: '排序号',
-                        Width: '45'
+                        width: '80'
                     }, {
                         field: 'ModifiedTime',
                         title: '最后操作时间',
                         /*minWidth: '80'*/
-                        Width: '80'
+                        width: '200'
                     }, {
                         field: 'OperatorName',
                         title: '最后操作人',
-                        Width: '60'
+                        width: '120'
                     }, {
                         title: '操作',
-                        Width: '140',
+                        width: '250',
                         align: 'center',
                         toolbar: '#bar'
                     }]
@@ -134,7 +134,7 @@
                         layer.open({
                             //type: 2 //此处以iframe举例
                             type: 2
-                            , title: '添加机构信息'
+                            , title: '角色信息'
                             , area: ['690px', '460px']
                             , skin: 'layui-layer-lan'
                             , shade: 0.5
@@ -143,12 +143,28 @@
                             , content: '/SysManager/Role/SetRoleInfo' //指定html
                             //, content: $('#roleform')//指定dom type不能为iframe等，只能为0、1
                             //, btn: ['确定'] //只是为了演示
+                            , btnAlign:'c'
+                            , btn: ['<i class="layui-icon layui-icon-ok"></i>' + '保存', '<i class="layui-icon layui-icon-return">' + '返回']
                             , yes: function (index, layero) {
+                                var oldData = layui.table.cache.roleTable;
+                                var len = oldData.length;
                                 var body = layer.getChildFrame('body', index);
-                                var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
-                                //console.log(body.html()) //得到iframe页的body内容
-                                //var data1 = iframeWin.getfrom();
+                                var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();                          
                                 console.log(iframeWin.layui.form.val('example'));   //这里只有layui 2.5.5的时候可以取到值
+                                alert(JSON.stringify(iframeWin.layui.form.val('example')));
+                                var newData = iframeWin.layui.form.val('example');
+                                //循环数据，找到更新的数据行，直接更新
+                                for (var i = 0; i < len; i++) {
+                                    if (oldData[i].Id == data.Id) {
+                                        oldData[i].Name = newData.Name;
+                                        oldData[i].RoleDesc = newData.RoleDesc;
+                                        oldData[i].Num = newData.Num;
+                                        break;
+                                    }
+                                }
+                                alert(JSON.stringify(oldData));
+                                //重新加一下数据
+                                obj.update({ Name: newData.Name, RoleDesc: newData.RoleDesc, Num:newData.Num});
                                 layer.closeAll();
                             }
                             , zIndex: layer.zIndex //重点1
@@ -156,18 +172,38 @@
                                 var body = layer.getChildFrame('body', index);
                                 var iframeWin = window[layero.find('iframe')[0]['name']];
                                 //body.find("#username")[0].value='Hi，我是从父页来的';
-                                var dd = {
-                                    "password": "123456"
-                                    , "interest": 1
-                                    , "like[write]": true //复选框选中状态
-                                    , "close": true //开关状态
-                                    , "sex": "女"
-                                    , "desc": "我爱 layui"
-                                };
+                                //var dd = {
+                                //    "password": "123456"
+                                //    , "interest": 1
+                                //    , "like[write]": true //复选框选中状态
+                                //    , "close": true //开关状态
+                                //    , "sex": "女"
+                                //    , "desc": "我爱 layui"
+                                //};
+                                var dd = data;
                                 iframeWin.loadfrom(dd);
                             }
                         });
                         break;
+                    case 'delRole':
+                        layer.confirm('真的删除角色记录?', function (index) {
+                            //$.post('/Test/TableGridDelete', { id: data.P_NO }, function (rsp) {
+                            //    if (rsp && rsp.success === true) {
+                            //        layer.msg('删除成功');
+                            //        obj.del();
+                            //        layer.close(index);
+                            //    } else {
+                            //        if (rsp && rsp.message) {
+                            //            layer.alert(rsp.message);
+                            //        }
+                            //        else {
+                            //            layer.alert('删除失败');
+                            //        }
+                            //    }
+                            //}, 'json');
+                            obj.del();
+                            layer.close(index);
+                        });
                     default:
                         break;
                 }
@@ -181,7 +217,41 @@
                     active[type] && active[type].call(this);
                 }
                 if (obj.event === 'addRole') {
-                    alert('add');
+                    //多窗口模式，层叠置顶
+                    layer.open({
+                        //type: 2 //此处以iframe举例
+                        type: 2
+                        , title: '添加角色信息'
+                        , area: ['690px', '460px']
+                        , skin: 'layui-layer-lan'
+                        , shade: 0.5
+                        , maxmin: true
+                        , offset: "auto"
+                        , content: '/SysManager/Role/SetRoleInfo' //指定html
+                        //, content: $('#roleform')//指定dom type不能为iframe等，只能为0、1
+                        //, btn: ['确定'] //只是为了演示
+                        , btnAlign: 'c'
+                        , btn: ['<i class="layui-icon layui-icon-ok"></i>' + '保存', '<i class="layui-icon layui-icon-return">' + '返回']
+                        , yes: function (index, layero) {
+                            var oldData = layui.table.cache.roleTable;
+                            var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();                          
+                            console.log(iframeWin.layui.form.val('example'));   //这里只有layui 2.5.5的时候可以取到值
+                            alert(JSON.stringify(iframeWin.layui.form.val('example')));
+                            var newData = iframeWin.layui.form.val('example');
+
+                            oldData.unshift({ Id: 3, Name: newData.Name, RoleDesc: newData.RoleDesc, Num: newData.Num });
+                            alert(JSON.stringify(oldData));
+                            //url参数设置为空可以解决问题,新版即可添加
+                            layui.table.reload('roleTable', { url:'',data: oldData });
+                            layer.closeAll();
+                        }
+                        , zIndex: layer.zIndex //重点1
+                        , success: function (layero, index) {
+                            var iframeWin = window[layero.find('iframe')[0]['name']];
+                            var dd = { Id: null, Name: null, RoleDesc: null, Num: null };
+                            iframeWin.loadfrom(dd);
+                        }
+                    });
                 }
             });
 
