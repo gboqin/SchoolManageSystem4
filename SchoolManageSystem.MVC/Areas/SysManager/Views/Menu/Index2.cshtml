@@ -1,0 +1,116 @@
+﻿@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>菜单管理</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+</head>
+<body class="layui-hide">
+    <table id="demoTreeTb"></table>
+
+    <!-- 操作列 -->
+    <script type="text/html" id="auth-state">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        layui.config({
+            base: '/lib/layui/treetable/'
+        }).extend({
+            treeTable: 'treeTable'
+        });
+
+        layui.use(['layer', 'util', 'treeTable'], function () {
+            var $ = layui.jquery;
+            var layer = layui.layer;
+            var util = layui.util;
+            var treeTable = layui.treeTable;
+            $('body').removeClass('layui-hide');
+
+            $.ajax({
+                type: 'GET',
+                //url: '/Json/menus3.json', 
+                url: '/SysManager/Menu/GetTestMenus',
+                //url: '/SysManager/Menu/GetMenus',
+                dataType: "json",
+                success: function (res) {
+                    alert(JSON.stringify(res));            
+                    //alert(res.data.length);
+                    var mydata = {
+                        "code": 0,
+                        "msg": "",
+                        "count": res.data.length,
+                        "data": JSON.parse(JSON.stringify(res.data))
+                    };
+                    alert(JSON.stringify(mydata.data));
+                    //alert(JSON.stringify(mydata));
+                    // 渲染表格
+                    var insTb = treeTable.render({
+                        elem: '#demoTreeTb',
+                        /*url: '/Json/menus3.json',*/
+                        data: mydata,
+                        toolbar: 'default',
+                        height: 'full',
+                        tree: {
+                            iconIndex: 2,
+                            isPidData: true,
+                            idName: 'id',
+                            pidName: 'parentId'
+                            //pidName: 'parentId'
+                        },
+                        defaultToolbar: ['filter', 'print', 'exports', {
+                            title: '提示',
+                            layEvent: 'LAYTABLE_TIPS',
+                            icon: 'layui-icon-tips'
+                        }],
+                        cols: [
+                            [
+                                { type: 'numbers' },
+                                { type: 'checkbox' },
+                                { field: 'name', title: '菜单名称', minWidth: 165 },
+                                { field: 'url', title: '菜单地址' },
+                                //{
+                                //    title: '创建时间', templet: function (d) {
+                                //        return util.toDateString(d.createdTime);
+                                //    }
+                                //},
+                                { align: 'center', toolbar: '#auth-state', title: '操作', width: 120 }
+                            ]
+                        ],
+                        style: 'margin-top:0;'
+                        //, parseData: function (res) {
+                        //    alert(JSON.stringify(res));
+                        //    alert(JSON.stringify(res.data.length));
+                        //    return {
+                        //        "code": 0, //解析接口状态
+                        //        "msg": '', //解析提示文本
+                        //        "count": res.data.length, //解析数据长度
+                        //        "data": res.data //解析数据列表
+                        //    };
+                        //}
+                        //, parseData: function (res) {
+                        //    var resData = JSON.parse(res.data);
+                        //    var result = JSON.parse(JSON.stringify(resData.Data));
+                        //    return {
+                        //        "code": 0, //解析接口状态
+                        //        "msg": '', //解析提示文本
+                        //        "count": result.length, //解析数据长度
+                        //        "data": result //解析数据列表
+                        //    };
+                        //}
+                    });
+                },
+                error: function (jqXHR) {
+                    aler("发生错误：" + jqXHR.status);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

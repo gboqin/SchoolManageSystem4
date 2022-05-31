@@ -1,0 +1,119 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Layui树形表格3.x演示</title>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+    <style>
+        .demo-side {
+            position: relative;
+            transition: all .3s;
+        }
+
+            .demo-side.show {
+                padding-left: 120px;
+                position: relative;
+            }
+
+            .demo-side:before {
+                content: "假设这是侧边栏, treeTable使用了与layui数据表格完全不同的列宽分配方式, 由浏览器来分配, 所以当容器宽度变化后会自动适应, 对单页面系统非常友好";
+                position: absolute;
+                left: 0;
+                top: 50%;
+                margin-top: -90px;
+                width: 105px;
+                visibility: hidden;
+                line-height: 1.5;
+            }
+
+            .demo-side.show:before {
+                visibility: visible;
+            }
+    </style>
+</head>
+<body class="layui-hide">
+    <div class="page-wrapper">
+        <div class="demo-side">
+            <table id="demoTreeTb"></table>
+        </div>
+    </div>
+
+    <!-- 表格操作列 -->
+    <script type="text/html" id="tbBar">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        layui.config({
+            base: '/lib/layui/treetable/'
+        }).extend({
+            treeTable:'treeTable'
+        });
+        layui.use(['layer', 'util', 'treeTable'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var util = layui.util;
+        var treeTable = layui.treeTable;
+        $('body').removeClass('layui-hide');
+
+        // 渲染表格
+        var insTb = treeTable.render({
+            elem: '#demoTreeTb',
+            url: '/Json/menus.json',
+            toolbar: 'default',
+            height: 'full',
+            tree: {
+                iconIndex: 2,
+                isPidData: true,
+                idName: 'authorityId',
+                pidName: 'parentId'
+            },
+            defaultToolbar: ['filter', 'print', 'exports', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [
+                [
+                    {title: '只是想演示一个三级表头', colspan: 9},
+                ],
+                [
+                    {title: '只是想演示一个多级表头', colspan: 4},
+                    {field: 'menuUrl', title: '菜单地址', rowspan: 2},
+                    {title: '这是一个二级表头', colspan: 4}
+                ],
+                [
+                    {type: 'numbers'},
+                    {type: 'checkbox'},
+                    {field: 'authorityName', title: '菜单名称', minWidth: 165},
+                    {
+                        title: '菜单图标', align: 'center', hide: true,
+                        templet: '<p><i class="layui-icon {{d.menuIcon}}"></i></p>'
+                    },
+                    {field: 'authority', title: '权限标识'},
+                    {title: '类型', templet: '<p>{{d.isMenu?"菜单":"按钮"}}</p>', align: 'center', width: 60},
+                    {
+                        title: '创建时间', templet: function (d) {
+                            return util.toDateString(d.createTime);
+                        }
+                    },
+                    {align: 'center', toolbar: '#tbBar', title: '操作', width: 120}
+                ]
+            ],
+            style: 'margin-top:0;'
+            //, parseData: function (res) {
+            //    alert(JSON.stringify(res));
+            //    return {
+            //        "code": 0, //解析接口状态
+            //        "msg": '', //解析提示文本
+            //        "count": res.data.count, //解析数据长度
+            //        "data": res.data //解析数据列表
+            //    };
+            //}
+        });
+    });
+    </script>
+</body>
+</html>

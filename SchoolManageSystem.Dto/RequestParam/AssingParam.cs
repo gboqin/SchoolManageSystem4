@@ -7,8 +7,8 @@ namespace SchoolManageSystem.Dto.RequestParam
 {
     public class AssingParam
     {
-        public RoleDto role { get; set; }
-        public List<long> firstMIds { get; set; }
-        public List<long> setMIds { get; set; }
+        public long RId { get; set; }
+        public long[] RawIds { get; set; }
+        public long[] SetIds { get; set; }
     }
 }

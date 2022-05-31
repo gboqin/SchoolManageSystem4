@@ -70,6 +70,9 @@ namespace SchoolManageSystem.Dto.CusEntity
         [StringLength(64)]
         [Column("Icon")]
         public string Icon { get; set; }
+        public DateTime? CreatedTime { get; set; }
+        public DateTime? ModifiedTime { get; set; }
+
         public List<MenuDto> ChildMenus = new List<MenuDto>();
     }
 }

@@ -1,0 +1,156 @@
+﻿@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>菜单管理</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/treetable-lay/treetable.css")" />
+</head>
+<body class="layui-hide">
+    <table id="demoTreeTb" lay-filter="menuruv"></table>
+
+    <!-- 操作列 -->
+    <script type="text/html" id="auth-state">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        layui.config({
+            base: '/lib/layui/app/'
+        }).extend({
+            treeTable: 'treeTable'
+        });
+        // 存放拓展模块的根目录
+        layui.use(['treeTable', 'layer'], function () {
+            var layer = layui.layer;
+            var treeTable = layui.treeTable;
+            $('body').removeClass('layui-hide');
+            //渲染表格
+            // 渲染表格
+            treeTable.render({
+                elem: '#demoTreeTb',
+                url: '/SysManager/Menu/GetMenus',
+                method: 'get',
+                toolbar: 'default',
+                height: 'full-10',
+                tree: {
+                    iconIndex: 2,
+                    isPidData: true,
+                    idName: 'id',//父ID
+                    pidName: 'parentId',//子ID
+                    openName: 'open',// 是否默认展开的字段名
+                    //public bool open { get; set; }open字段是bool类型
+                },
+                defaultToolbar: ['filter', 'print', 'exports'],
+                cols: [[
+                    { type: 'checkbox', fixed: 'left' }
+                    , { field: 'id', title: 'ID', fixed: 'left', unresize: true, sort: true, hide: true }
+                    , { field: 'name', title: '菜单名称', edit: 'text' }
+                    , { field: 'parentId', title: '父ID', hide: true }
+                    , { fixed: 'right', title: '操作', toolbar: '#auth-state' }
+                ]],
+                style: 'margin-top:0;'
+            });
+
+        });
+    </script>
+
+   <!--
+    // 渲染表格
+    var treemenu = {
+    reload: function () {
+    treetable.render({
+    elem: '#menus-table',
+    url: serviceBase + '/service/menuWork/list',
+    // toolbar: 'default',
+    height: 'full-200',
+    method:'get',
+    where: {
+    name: $("#name").val()
+    },
+    tree: {
+    iconIndex: 2,
+    isPidData: true,
+    idName: 'code',//父ID
+    pidName: 'parentCode',//子ID
+    openName: 'open',// 是否默认展开的字段名
+    //public bool open { get; set; }open字段是bool类型
+    },
+    // defaultToolbar: ['filter', 'print', 'exports'],
+    cols: [[
+    {type: 'numbers'},
+    {field: 'code', title: '菜单代码', width: 100},
+    {field: 'name', title: '名称', width: 250},
+    {field: 'description', title: '描述', width: 200},
+    {field: 'url', title: '菜单路由'},
+    {field: 'perCode', title: '权限代码'},
+    {field: 'icon', title: '图标', align: 'center', width: 100,
+    templet:'<div><i class="layui-icon {{d.icon}}"></i></div>'
+    },
+    {field: 'seqNo', title: '顺序号', align: 'center', width: 110},
+    {field: 'createTime', title: '创建时间', align: 'center', width: 200},
+    {toolbar: '#menusState', width: 120, align: 'center', title: '操作'}
+    ]],
+    style: 'margin-top:0;'
+
+    });
+    treetable.on('tool(menus-table)', function (obj) {
+    var data = obj.data;
+    var layEvent = obj.event;
+    if (layEvent === 'detail') {
+    layer.open({
+    type: 2, //type2表示打开iframe层
+    title: ['详情'],  //false表示不显示标题
+    area: ['800px', '600px'],
+    shade: 0.1, //是否显示遮罩层
+    // shadeClose: true, //是否点击遮罩关闭
+    id: "detail",  //设置id防止重复弹出
+    moveType: 0, //拖拽模式0或者1
+    content: kiteBase + "page/configure/menu_detail.html?" + $.param({
+    code: data.code,
+    icon: data.icon,
+    })
+    });
+    } else if (layEvent === 'edit') {
+    layer.open({
+    type: 2, //type2表示打开iframe层
+    title: ['新增配置'],  //false表示不显示标题
+    area: ['800px', '700px'],
+    shade: 0.1, //是否显示遮罩层
+    // shadeClose: true, //是否点击遮罩关闭
+    id: "edit1",  //设置id防止重复弹出
+    moveType: 0, //拖拽模式0或者1
+    content: kiteBase + "page/configure/menu_edit.html?" + $.param({
+    code: data.code,
+    icon: data.icon,
+    })
+    });
+    }
+    });
+    form.render();
+    }
+
+    }
+
+    layui.use(['layer', 'form', 'table', 'element', 'treeTable'], function () {
+    var $ = layui.$;
+    form = layui.form;
+    layer = layui.layer;
+    element = layui.element;
+    menuPerTable = layui.table;
+    treetable = layui.treeTable;
+
+    treemenu.reload();
+    menuPer.reload();
+
+    })
+
+   -->
+</body>
+</html>

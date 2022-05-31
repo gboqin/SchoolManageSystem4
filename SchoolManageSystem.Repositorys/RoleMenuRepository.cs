@@ -33,26 +33,32 @@ namespace SchoolManageSystem.Repositorys
                       where rm.Deleted == 0 && rm.RoleId == Id
                       select rm.MenuId;
             //_dbContext.Set<SysRoleMenuRelation>().Where(rm => rm.Deleted == 0 && rm.RoleId == Id).Select(rm => rm.MenuId).ToListAsync();
-            return  await ids.ToListAsync();
+            var ss = await ids.ToListAsync();
+
+            return ss;
         }
 
         public async Task SetRoleMenuRelation(long roleId, List<long> firstMIds, List<long> setMIds)
         {
-            var ids = firstMIds.Except(setMIds).ToList();//取得差集
-            foreach(var item in ids)
-            {
-                if (firstMIds.Contains(item))
+            //f有，s无的差集
+            var fss = firstMIds.Except(setMIds).ToList();//取得差集
+            if (fss.Count > 0) 
+            { 
+                foreach (var item in fss)
                 {
-                    //差集中Id,原集Ids中存在，删除
                     var rm = await _dbContext.Set<SysRoleMenuRelation>().Where(rm => rm.Deleted == 0 && rm.RoleId == roleId && rm.MenuId == item).FirstOrDefaultAsync();
                     base.Delete(rm);
                 }
-                else
+            }
+            //s有，f无的差集
+            var sfs = setMIds.Except(firstMIds).ToList();
+            if (sfs.Count>0)
+            {
+                foreach (var item in sfs)
                 {
-                    //不存在，添加
                     var rm = new SysRoleMenuRelation { RoleId = roleId, MenuId = item };
                     await base.InsertAsync(rm);
-                }               
+                }
             }
         }
     }

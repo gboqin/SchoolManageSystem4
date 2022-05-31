@@ -21,10 +21,18 @@ namespace SchoolManageSystem.Common.AutoMapper
 
             #region menu
             CreateMap<SysMenu, MenuDto>();
+            CreateMap<MenuDto, SysMenu>();
+            //CreateMap<SysMenu, TestMenuDto>().ForMember(m=> m.Id,o=>o.MapFrom(s=>s.Id.ToString()))
+            //    .ForMember(m => m.ParentId, o => o.MapFrom(s => s.ParentId.ToString()));
+            CreateMap<SysMenu, TestMenuDto>();
+            CreateMap<TestMenuDto, SysMenu>();
+            CreateMap<SysMenu, SelectTreeDto>();
+            CreateMap<SelectTreeDto, SysMenu>();
             #endregion
 
             #region role
             CreateMap<SysRole, RoleDto>();
+            CreateMap<RoleDto, SysRole > ();
             #endregion
             /*CreateMap<Post, PostResource>()
             .ForMember(dest => dest.LastModified, opt => opt.MapFrom(src => src.UpdatedTime.HasValue ? src.CreatedTime : src.UpdatedTime));

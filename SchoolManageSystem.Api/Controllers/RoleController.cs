@@ -58,11 +58,18 @@ namespace SchoolManageSystem.Api.Controllers
         [HttpGet, Route("TreeMenus")]
         public async Task<IActionResult> GetTreeMenus()
         {
-            var result = await _menuService.GetAllMenus();
+            var result = await _menuService.GetTreeMenus();
             return MyJson(result);
         }
 
-        [HttpGet, Route("FirstMenuIdsByRoleId")]
+        [HttpPost,Route("GetMenuIdsByRIds")]
+        public async Task<IActionResult> GetMenuIdsByRoleIds(params long[] Ids)
+        {
+            var result = await _menuService.GetMenuIdsByRoleIds(Ids);
+            return MyJson(result);
+        }
+
+        [HttpPost, Route("FirstMenuIdsByRoleId")]
         public async Task<IActionResult> GetFirstMenuIdsByRoleId(long roleId)
         {
             var result = await _roleService.GetMenuIdsByRoleId(roleId);
@@ -72,7 +79,7 @@ namespace SchoolManageSystem.Api.Controllers
         [HttpPost, Route("AssignPermissions")]
         public async Task<int> AssignPermissions(AssingParam assingParam)
         {
-            var result = await _roleService.AssignPermissions(assingParam.role.Id, assingParam.firstMIds, assingParam.setMIds);
+            var result = await _roleService.AssignPermissions(assingParam.RId, assingParam.RawIds.ToList(), assingParam.SetIds.ToList());
             return result;
         }
     }

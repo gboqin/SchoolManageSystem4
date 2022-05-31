@@ -1,0 +1,90 @@
+﻿@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>菜单管理</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/treetable-lay/treetable.css")" />
+</head>
+<body class="layui-hide">
+    <table id="demoTreeTb"></table>
+
+    <!-- 操作列 -->
+    <script type="text/html" id="auth-state">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        $(document).ready(function () {
+            layui.config({
+                base: '/lib/layui/treetable-lay/'
+            }).extend({
+                treetable: 'treetable'
+            });
+            // 存放拓展模块的根目录
+            layui.use(['treetable', 'layer'], function () {
+                var layer = layui.layer;
+                var treetable = layui.treetable;
+                //渲染表格
+                var renderTable = function () {
+                    alert(1);
+                    layer.load(2);  //加载层
+                    treetable.render({
+                        height: 'full-10',
+                        id: 'menu',
+                        treeColIndex: 2, //树形图标显示在第几列
+                        treeSpid: '0', //最上级的父级id
+                        treeIdName: 'Id', //id字段的名称
+                        treePidName: 'ParentId', //父级节点字段
+                        treeDefaultClose: false, //是否默认折叠
+                        treeLinkage: false, //父级展开时是否自动展开所有子级
+                        elem: '#demoTreeTb', //表格id
+                        url: '/SysManager/Menu/GetMenus',
+                        toolbar: 'default',
+                        //toolbar: '#toolbarDemo',
+                        defaultToolbar: ['filter', 'print', 'exports', {
+                            title: '提示',
+                            layEvent: 'LAYTABLE_TIPS',
+                            icon: 'layui-icon-tips'
+                        }],
+                        page: false,
+                        cols: [[
+                            { type: 'numbers' },
+                            { type: 'checkbox' },
+                            { field: 'Name', title: '菜单名称', minWidth: 165 },
+                            { field: 'Url', title: '菜单地址', rowspan: 2 },
+                            {
+                                title: '菜单图标', align: 'center', hide: true,
+                                templet: '<p><i class="layui-icon {{d.Icon}}"></i></p>'
+                            },
+                            { title: '类型', templet: '<p>{{d.Type==1?"菜单":"按钮"}}</p>', align: 'center', width: 60 },
+                            {
+                                title: '创建时间', templet: function (d) {
+                                    return util.toDateString(d.CreatedTime);
+                                }
+                            },
+                            { align: 'center', toolbar: '#auth-state', title: '操作', width: 120 }
+                        ]],
+                        parseData: function (res) {
+                            alert(JSON.stringify(res));
+                        },
+                        //style: 'margin-top:0;',
+                        //数据渲染完的回调
+                        done: function () {
+                            //关闭加载
+                            layer.closeAll('loading');
+                        }
+                    })
+                };
+                renderTable();
+            });
+        })
+    </script>
+</body>
+</html>

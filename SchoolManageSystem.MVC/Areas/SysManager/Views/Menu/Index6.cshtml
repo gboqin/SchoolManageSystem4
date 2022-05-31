@@ -1,0 +1,62 @@
+﻿@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>菜单管理</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+</head>
+<body class="layui-hide">
+    <table id="demoTreeTb"></table>
+
+    <!-- 操作列 -->
+    <script type="text/html" id="auth-state">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        layui.config({
+            base: '/lib/layui/treetable/'
+        }).extend({
+            treeGrid: 'treeGrid'
+        });
+
+        layui.use(['layer', 'util', 'treeGrid', 'jquery'], function () {
+            var $ = layui.jquery;
+            var treeGrid = layui.treeGrid;
+            $('body').removeClass('layui-hide');
+
+            //获取数据
+            $.get('/SysManager/Menu/GetMenus', function (d) {
+                alert(1);
+                alert(JSON.stringify(d));
+                //$.each(d.data, function (i, e) {
+                //    e.isOpen = false;	//全部关闭   isOpen=false  关闭  true  展开
+                //})
+                alert(JSON.stringify(d));
+                //渲染数据
+                treeGrid.render({
+                    id: "perTable"      		// 标识
+                    , elem: '#demoTreeTb'	// 对应的tableId
+                    , data: d.data			// 加载的数据
+                    , idField: 'id'			// 唯一标识  数据库中的主键 一般用id表示
+                    , treeId: 'id'			// 树形id字段名称
+                    , treeUpId: 'parentId'	// 树形父id字段名称
+                    , treeShowName: 'name'	// 以树形式显示的字段
+                    , cols: [[				// 加载数据
+                        { field: 'name', title: '权限名称' }
+                        //, { field: 'type', title: '类型' }
+                        , { field: 'url', title: '连接地址' }
+                    ]]
+                    , page: false
+                })
+            })
+        });
+    </script>
+</body>
+</html>

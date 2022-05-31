@@ -16,6 +16,13 @@ namespace SchoolManageSystem.IServices
 
         Task<ResponseResult<List<MenuDto>>> GetNavTreeMenus();
         Task<ResponseResult<List<MenuDto>>> GetAllMenus();
+        Task<ResponseResult<List<Dictionary<string,object>>>> GetTreeMenus();
+        Task<ResponseResult<List<SelectTreeDto>>> GetTreeSelectMenus();
         Task<ResponseResult<List<long>>> GetMenuIdsByRoleIds(params long[] Ids);
+        Task<ResponseResult<List<MenuDto>>> GetAllMenuList();
+        Task<ResponseResult<List<TestMenuDto>>> GetAllTestMenuList(); 
+        Task<ResponseResult<TestMenuDto>> AddMenu(TestMenuDto menu);
+        Task<ResponseResult<TestMenuDto>> EdtMenu(TestMenuDto menu);
+        Task<ResponseResult<int>> DelMenu(TestMenuDto menu);
     }
 }

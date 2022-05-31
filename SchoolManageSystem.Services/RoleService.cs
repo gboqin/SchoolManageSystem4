@@ -56,9 +56,10 @@ namespace SchoolManageSystem.Services
         public async Task<ResponseResult<RoleDto>> AddRole(RoleDto role)
         {
             var result = new ResponseResult<RoleDto>();
-            var model = await _roleRepository.InsertAsync(_mapper.Map<SysRole>(role));
+            var data = _mapper.Map<SysRole>(role);
+            var model = await _roleRepository.InsertAsync(data);
             await _unitOfWork.SaveChangesAsync();
-            return result.Succeed(_mapper.Map<RoleDto>(model));
+            return result.Succeed(_mapper.Map<RoleDto>(data));
         }
 
         public async Task<ResponseResult<RoleDto>> EditRole(RoleDto role)
@@ -79,8 +80,9 @@ namespace SchoolManageSystem.Services
                     var rms = _roleMenuRepository.GetAll(rm => rm.RoleId == role.Id).ToList();
                     if (rms.Count() > 0)
                         _roleMenuRepository.Delete(rms);
-                    _roleRepository.Delete(_mapper.Map<SysRole>(role));
-                    await _unitOfWork.SaveChangesAsync();
+                    var _role = _roleRepository.GetAll(r=>r.Id==role.Id).FirstOrDefault();
+                    _roleRepository.Delete(_role);
+                    var len = await _unitOfWork.SaveChangesAsync();
                     await tran.CommitAsync();
                     return result.Succeed(role);
                 }

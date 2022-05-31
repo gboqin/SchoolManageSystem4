@@ -65,7 +65,7 @@ namespace SchoolManageSystem.Repositorys
         {
             IQueryable<SysMenu> menus = null;
             menus = from m in _dbContext.Set<SysMenu>() 
-                    where m.Type == EnumMenuType.Menu && m.ParentId == null
+                    where m.Type == EnumMenuType.Menu && m.ParentId == -1
                     orderby m.OrderIndex
                     select m;
             var a = menus.ToList();

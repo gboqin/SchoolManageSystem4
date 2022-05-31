@@ -187,7 +187,11 @@ layui.define(['layer', 'table'], function (exports) {
                     $ti.trigger('click');
                 }
             });
-        }
+        },
+        //    //事件监听
+        //on: function(){
+        //    alert(33);
+        //}
     };
 
     layui.link(layui.cache.base + 'treetable-lay/treetable.css');

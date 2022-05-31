@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SchoolManageSystem.Common.Controllers;
+using SchoolManageSystem.Dto.CusEntity;
 using SchoolManageSystem.IServices;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,48 @@ namespace SchoolManageSystem.Api.Controllers
         public async Task<ActionResult> GetNavTreeMenus()
         {
             var result = await _menuService.GetNavTreeMenus();
+            return MyJson(result);
+        }
+
+        [HttpGet, Route("AllMenus")]
+        public async Task<IActionResult> GetAllMenus()
+        {
+            var result = await _menuService.GetAllMenuList();
+            return MyJson(result);
+        }
+
+        [HttpGet, Route("AllTestMenus")]
+        public async Task<IActionResult> GetAllTestMenus()
+        {
+            var result = await _menuService.GetAllTestMenuList();
+            return MyJson(result);
+        }
+
+        [HttpGet, Route("TreeSelectMenus")]
+        public async Task<IActionResult> GetTreeSelectMenus()
+        {
+            var result = await _menuService.GetTreeSelectMenus();
+            return MyJson(result);
+        }
+
+        [HttpPost, Route("AddMenu")]
+        public async Task<IActionResult> AddMenu(TestMenuDto menu)
+        {
+            var result = await _menuService.AddMenu(menu);
+            return MyJson(result);
+        }
+
+        [HttpPost, Route("EdtMenu")]
+        public async Task<IActionResult> EdtRole(TestMenuDto menu)
+        {
+            var result = await _menuService.EdtMenu(menu);
+            return MyJson(result);
+        }
+
+        [HttpPost, Route("DelMenu")]
+        public async Task<IActionResult> DelMenu(TestMenuDto menu)
+        {
+            var result = await _menuService.DelMenu(menu);
             return MyJson(result);
         }
     }

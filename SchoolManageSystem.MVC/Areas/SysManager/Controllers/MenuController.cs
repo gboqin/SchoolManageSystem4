@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using SchoolManageSystem.Basics.Enums;
 using SchoolManageSystem.Basics.ResponseResults;
 using SchoolManageSystem.Dto.CusEntity;
-using SchoolManageSystem.Dto.RequestParam;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
@@ -20,31 +18,26 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
     [Authorize(Roles = "System")]
     [Area("SysManager")]
     [Route("SysManager/[controller]/[action]")]
-    public class RoleController : Controller
+    public class MenuController : Controller
     {
         HttpClient client = new HttpClient();
-        string uid,token,sessionId;
+        string uid, token, sessionId;
         string baseUrl = "http://localhost:49183";
         public IActionResult Index()
         {
             return View();
         }
 
-        public IActionResult Index1()
+        public IActionResult SetMenuInfo()
         {
             return View();
         }
 
-        public IActionResult Index2()
+        [HttpGet]
+        public async Task<JsonResult> GetMenus()
         {
-            return View();
-        }
+            ResponseResult<List<MenuDto>> menus;
 
-
-        public async Task<JsonResult> GetRolesByName(string name)
-        {
-
-            ResponseResult<List<RoleDto>> roles;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 uid = User.FindFirst(ClaimTypes.Sid).Value;
@@ -54,23 +47,21 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 client.DefaultRequestHeaders.Add("uid", uid);
                 client.DefaultRequestHeaders.Add("token", token);
                 client.DefaultRequestHeaders.Add("sessionId", sessionId);
-
-                var requestUri = string.Format("/api/Role/RolesByName?roleName={0}", name);
-                var response = await client.PostAsync(baseUrl + requestUri, null);
+                var response = await client.GetAsync(baseUrl + "/api/Menu/AllMenus");
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    roles = JsonConvert.DeserializeObject<ResponseResult<List<RoleDto>>>(content);
-                    //https://blog.csdn.net/u011127019/article/details/72801033/
-                    //对于Newtonsoft.Json默认 已经处理过循环引用,也就是对于关联表的 对象或列表都不会序列化出来。
-                    //设置循环引用，及引用类型序列化的层数。
-                    //注：目前在 EF core中目前不支持延迟加载，无所谓循环引用了
+                    menus = JsonConvert.DeserializeObject<ResponseResult<List<MenuDto>>>(content);
                     JsonSerializerSettings settings = new JsonSerializerSettings();
-                    settings.MaxDepth = 10; //设置序列化的最大层数
-                    //指定如何处理循环引用，None--不序列化，Error-抛出异常，Serialize--仍要序列化
-                    string json = JsonConvert.SerializeObject(roles, settings);
+                    //string json = JsonConvert.SerializeObject(menus, settings);
+                    //return Json(new ResponseResult().Succeed(json));
+                    //Index7
+                    return Json(new { code = 0, msg = "", count = menus.Data.Count, data = menus.Data });
 
-                    return Json(new ResponseResult().Succeed(json));
+                    //return Json(new
+                    //{
+                    //    data = menus.Data
+                    //});
                 }
                 return Json(new ResponseResult().Fail(ResponseCode.Fail, "error", response));
             }
@@ -78,9 +69,9 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
         }
 
         [HttpGet]
-        public async Task<JsonResult> GetMenus()
+        public async Task<JsonResult> GetSelectMenus()
         {
-            ResponseResult<List<Dictionary<string, object>>> menus;
+            ResponseResult<List<SelectTreeDto>> menus;
 
             if (HttpContext.User.Identity.IsAuthenticated)
             {
@@ -91,30 +82,24 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 client.DefaultRequestHeaders.Add("uid", uid);
                 client.DefaultRequestHeaders.Add("token", token);
                 client.DefaultRequestHeaders.Add("sessionId", sessionId);
-                var response = await client.GetAsync(baseUrl + "/api/Role/TreeMenus");
+                var response = await client.GetAsync(baseUrl + "/api/Menu/TreeSelectMenus");
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    menus = JsonConvert.DeserializeObject<ResponseResult<List<Dictionary<string,object>>>>(content);
-                    //https://blog.csdn.net/u011127019/article/details/72801033/
-                    //对于Newtonsoft.Json默认 已经处理过循环引用,也就是对于关联表的 对象或列表都不会序列化出来。
-                    //设置循环引用，及引用类型序列化的层数。
-                    //注：目前在 EF core中目前不支持延迟加载，无所谓循环引用了
-                    JsonSerializerSettings settings = new JsonSerializerSettings();
-                    settings.MaxDepth = 10; //设置序列化的最大层数
-                    //指定如何处理循环引用，None--不序列化，Error-抛出异常，Serialize--仍要序列化
-                    string json = JsonConvert.SerializeObject(menus, settings);
-
-                    return Json(new ResponseResult().Succeed(json));
+                    menus = JsonConvert.DeserializeObject<ResponseResult<List<SelectTreeDto>>>(content);
+                    //JsonSerializerSettings settings = new JsonSerializerSettings();
+                    //string json = JsonConvert.SerializeObject(menus, settings);
+                    return Json(menus.Data);
                 }
                 return Json(new ResponseResult().Fail(ResponseCode.Fail, "error", response));
             }
             return Json(new ResponseResult().Fail(ResponseCode.Fail, "未登录！", "error"));
         }
 
-        public async Task<JsonResult> GetMenuIdsByRId(long Id)
+        [HttpGet]
+        public async Task<JsonResult> GetTestMenus()
         {
-            ResponseResult<List<long>> Ids;
+            ResponseResult<List<TestMenuDto>> menus;
 
             if (HttpContext.User.Identity.IsAuthenticated)
             {
@@ -125,38 +110,31 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 client.DefaultRequestHeaders.Add("uid", uid);
                 client.DefaultRequestHeaders.Add("token", token);
                 client.DefaultRequestHeaders.Add("sessionId", sessionId);
-
-                var requestUri = string.Format("/api/Role/FirstMenuIdsByRoleId?roleId={0}", Id);
-                var response = await client.PostAsync(baseUrl + requestUri, null); ;
+                var response = await client.GetAsync(baseUrl + "/api/Menu/AllTestMenus");
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    Ids = JsonConvert.DeserializeObject<ResponseResult<List<long>>>(content);
-                    //https://blog.csdn.net/u011127019/article/details/72801033/
-                    //对于Newtonsoft.Json默认 已经处理过循环引用,也就是对于关联表的 对象或列表都不会序列化出来。
-                    //设置循环引用，及引用类型序列化的层数。
-                    //注：目前在 EF core中目前不支持延迟加载，无所谓循环引用了
+                    menus = JsonConvert.DeserializeObject<ResponseResult<List<TestMenuDto>>>(content);
                     JsonSerializerSettings settings = new JsonSerializerSettings();
-                    settings.MaxDepth = 10; //设置序列化的最大层数
-                    //指定如何处理循环引用，None--不序列化，Error-抛出异常，Serialize--仍要序列化
-                    string json = JsonConvert.SerializeObject(Ids, settings);
+                    //string json = JsonConvert.SerializeObject(menus, settings);
+                    //return Json(new ResponseResult().Succeed(json));
+                    //return Json(new{ code = 0 , msg = "" , count = menus.Data.Count, data = menus.Data });
 
-                    return Json(new ResponseResult().Succeed(json));
+                    return Json(new
+                    {
+                        status = new { code = 200, message = "操作成功" },
+                        data = menus.Data
+                    });
                 }
                 return Json(new ResponseResult().Fail(ResponseCode.Fail, "error", response));
             }
             return Json(new ResponseResult().Fail(ResponseCode.Fail, "未登录！", "error"));
-        }
-
-        public IActionResult SetRoleInfo()
-        {
-            return View();
         }
 
         [HttpPost]
-        public async Task<JsonResult> AddRole(RoleDto roleParam)
+        public async Task<JsonResult> AddMenu(TestMenuDto menuParam)
         {
-            ResponseResult<RoleDto> role;
+            ResponseResult<TestMenuDto> menu;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 uid = User.FindFirst(ClaimTypes.Sid).Value;
@@ -167,8 +145,8 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 client.DefaultRequestHeaders.Add("token", token);
                 client.DefaultRequestHeaders.Add("sessionId", sessionId);
 
-                var requestUri = string.Format("/api/Role/AddRole");
-                string param = JsonConvert.SerializeObject(roleParam);
+                var requestUri = string.Format("/api/Menu/AddMenu");
+                string param = JsonConvert.SerializeObject(menuParam);
                 var buffer = Encoding.UTF8.GetBytes(param);
                 var byteContent = new ByteArrayContent(buffer);
                 byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -177,10 +155,10 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    role = JsonConvert.DeserializeObject<ResponseResult<RoleDto>>(content);
+                    menu = JsonConvert.DeserializeObject<ResponseResult<TestMenuDto>>(content);
                     JsonSerializerSettings settings = new JsonSerializerSettings();
                     settings.MaxDepth = 10; //设置序列化的最大层数
-                    string json = JsonConvert.SerializeObject(role, settings);
+                    string json = JsonConvert.SerializeObject(menu, settings);
 
                     return Json(new ResponseResult().Succeed(json));
                 }
@@ -190,9 +168,9 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> EdtRole(RoleDto roleParam)
+        public async Task<JsonResult> EdtMenu(TestMenuDto menuParam)
         {
-            ResponseResult<RoleDto> role;
+            ResponseResult<TestMenuDto> menu;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 uid = User.FindFirst(ClaimTypes.Sid).Value;
@@ -203,8 +181,8 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 client.DefaultRequestHeaders.Add("token", token);
                 client.DefaultRequestHeaders.Add("sessionId", sessionId);
 
-                var requestUri = string.Format("/api/Role/EditRole");
-                string param = JsonConvert.SerializeObject(roleParam);
+                var requestUri = string.Format("/api/Menu/EdtMenu");
+                string param = JsonConvert.SerializeObject(menuParam);
                 var buffer = Encoding.UTF8.GetBytes(param);
                 var byteContent = new ByteArrayContent(buffer);
                 byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -213,10 +191,10 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    role = JsonConvert.DeserializeObject<ResponseResult<RoleDto>>(content);
+                    menu = JsonConvert.DeserializeObject<ResponseResult<TestMenuDto>>(content);
                     JsonSerializerSettings settings = new JsonSerializerSettings();
                     settings.MaxDepth = 10; //设置序列化的最大层数
-                    string json = JsonConvert.SerializeObject(role, settings);
+                    string json = JsonConvert.SerializeObject(menu, settings);
 
                     return Json(new ResponseResult().Succeed(json));
                 }
@@ -226,9 +204,9 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
         }
 
         [HttpDelete]
-        public async Task<JsonResult> DelRole(RoleDto roleParam)
+        public async Task<JsonResult> DelMenu(TestMenuDto menuParam)
         {
-            ResponseResult<RoleDto> role;
+            ResponseResult<int> changedCount;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 uid = User.FindFirst(ClaimTypes.Sid).Value;
@@ -239,8 +217,8 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 client.DefaultRequestHeaders.Add("token", token);
                 client.DefaultRequestHeaders.Add("sessionId", sessionId);
 
-                var requestUri = string.Format("/api/Role/DelRole");
-                string param = JsonConvert.SerializeObject(roleParam);
+                var requestUri = string.Format("/api/Menu/DelMenu");
+                string param = JsonConvert.SerializeObject(menuParam);
                 var buffer = Encoding.UTF8.GetBytes(param);
                 var byteContent = new ByteArrayContent(buffer);
                 byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -249,10 +227,10 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    role = JsonConvert.DeserializeObject<ResponseResult<RoleDto>>(content);
+                    changedCount = JsonConvert.DeserializeObject<ResponseResult<int>>(content);
                     JsonSerializerSettings settings = new JsonSerializerSettings();
                     settings.MaxDepth = 10; //设置序列化的最大层数
-                    string json = JsonConvert.SerializeObject(role, settings);
+                    string json = JsonConvert.SerializeObject(changedCount, settings);
 
                     return Json(new ResponseResult().Succeed(json));
                 }
@@ -260,48 +238,5 @@ namespace SchoolManageSystem.MVC.Areas.SysManager.Controllers
             }
             return Json(new ResponseResult().Fail(ResponseCode.Fail, "未登录！", "error"));
         }
-
-        public IActionResult AssignPermissions()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> Assign(AssingParam assingParam)
-        {
-            ResponseResult<int> result;
-            if (HttpContext.User.Identity.IsAuthenticated)
-            {
-                uid = User.FindFirst(ClaimTypes.Sid).Value;
-                token = User.FindFirst(ClaimTypes.Authentication).Value;
-                sessionId = User.FindFirst(ClaimTypes.SerialNumber).Value;
-
-                client.DefaultRequestHeaders.Add("uid", uid);
-                client.DefaultRequestHeaders.Add("token", token);
-                client.DefaultRequestHeaders.Add("sessionId", sessionId);
-
-                var requestUri = string.Format("/api/Role/AssignPermissions");
-                string param = JsonConvert.SerializeObject(assingParam);
-                var buffer = Encoding.UTF8.GetBytes(param);
-                var byteContent = new ByteArrayContent(buffer);
-                byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                //var _options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var response = await client.PostAsync(baseUrl + requestUri, byteContent).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    result = JsonConvert.DeserializeObject<ResponseResult<int>>(content);
-                    JsonSerializerSettings settings = new JsonSerializerSettings();
-                    settings.MaxDepth = 10; //设置序列化的最大层数
-                    string json = JsonConvert.SerializeObject(result, settings);
-
-                    return Json(new ResponseResult().Succeed(json));
-                }
-                return Json(new ResponseResult().Fail(ResponseCode.Fail, "error", response));
-            }
-            return Json(new ResponseResult().Fail(ResponseCode.Fail, "未登录！", "error"));
-        }
-
-
     }
 }

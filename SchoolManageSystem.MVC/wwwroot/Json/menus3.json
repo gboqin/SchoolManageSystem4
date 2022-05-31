@@ -1,0 +1,70 @@
+{
+  "code": 0,
+  "msg": "",
+  "count": 9,
+  "data": [
+    {
+      "id": 2,
+      "name": "用户管理",
+      "url": "system/user",
+      "createdTime": "2018/06/29 11:05:41",
+      "parentId": -1
+    },
+    {
+      "id": 9,
+      "name": "添加角色",
+      "url": "",
+      "createdTime": "2018/06/29 11:05:41",
+      "parentId": 7
+    },
+    {
+      "id": 3,
+      "name": "查询用户",
+      "url": "",
+      "createdTime": "2018/07/21 13:54:16",
+      "parentId": 2
+    },
+    {
+      "id": 4,
+      "name": "添加用户",
+      "url": null,
+      "createdTime": "2018/06/29 11:05:41",
+      "parentId": 2
+    },
+    {
+      "id": 5,
+      "name": "修改用户",
+      "url": null,
+      "createdTime": "2018/06/29 11:05:41",
+      "parentId": 2
+    },
+    {
+      "id": 6,
+      "name": "删除用户",
+      "url": null,
+      "createdTime": "2018/06/29 11:05:41",
+      "parentId": 2
+    },
+    {
+      "id": 7,
+      "name": "角色管理",
+      "url": "system/role",
+      "createdTime": "2018/06/29 11:05:41",
+      "parentId": -1
+    },
+    {
+      "id": 10,
+      "name": "删除角色",
+      "url": "",
+      "createdTime": "2018/07/21 19:54:59",
+      "parentId": 7
+    },
+    {
+      "id": 8,
+      "name": "查询角色",
+      "url": "",
+      "createdTime": "2018/07/21 13:54:59",
+      "parentId": 7
+    }
+  ]
+}

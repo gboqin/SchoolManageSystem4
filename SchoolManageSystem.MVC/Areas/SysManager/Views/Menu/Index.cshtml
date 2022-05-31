@@ -1,0 +1,218 @@
+﻿@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>菜单管理</title>
+    <script type="text/javascript" src="@Url.Content("~/lib/jquery/dist/jquery.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/layui/css/layui.css")" />
+</head>
+<body class="layui-hide">
+    <table id="demoTreeTb" lay-filter="menuruv"></table>
+
+    <script type="text/html" id="toolbar">
+        <div class="layui-form-item" style="margin-bottom:5px">
+            <button class="layui-btn layui-btn-normal layui-btn-sm" lay-event="add"><i class="layui-icon layui-icon-add-circle-fine"></i>添加</button>
+        </div>
+    </script>
+    <!-- 操作列 -->
+    <script type="text/html" id="auth-state">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script type="text/javascript" src="@Url.Content("~/lib/layui/layui.js")"></script>
+    <script>
+        layui.config({
+            base: '/lib/layui/treetable-lay/'
+        }).extend({
+            treetable: 'treetable'
+        });
+
+        layui.use(['treetable', 'layer', 'table'], function () {
+            var $ = layui.jquery;
+            var table = layui.table;
+            var layer = layui.layer;
+            var treetable = layui.treetable;
+            $('body').removeClass('layui-hide');
+
+            layer.load(2);    //加载数据动画
+            treetable.render({
+                id: 'menu',       //做刷新的时候需要用ID
+                treeColIndex: 2,	//树形图标显示在第几列 从0开始
+                treeSpid: '-1',		//最上级的父级id，可以自定义
+                treeIdName: 'id',	//id字段的名称
+                treePidName: 'parentId',	//pid字段的名称，父级菜单id
+                treeDefaultClose: true,	//是否默认折叠
+                treeLinkage: false,		//父级展开时是否自动展开所有子级
+                elem: '#demoTreeTb',	//表格id
+                url: '/SysManager/Menu/GetTestMenus',
+                //toolbar: 'default',
+                toolbar: '#toolbar',
+                defaultToolbar: ['filter'],//null
+                //defaultToolbar: ['filter', 'print', 'exports', {
+                //    title: '提示',
+                //    layEvent: 'LAYTABLE_TIPS',
+                //    icon: 'layui-icon-tips'
+                //}],
+                height: 'full-1',
+                page: false,
+                cols: [[
+                    { type: 'numbers' },
+                    { type: 'checkbox' },
+                    { field: 'name', title: '菜单名称', minWidth: 165 },
+                    { field: 'url', title: '菜单地址' },
+                    { align: 'center', toolbar: '#auth-state', title: '操作', width: 120 }
+                ]],
+                style: 'margin-top:0;',
+                //数据渲染完的回调
+                done: function (res) {
+                    //关闭加载
+                    layer.closeAll('loading');
+                    $('th').css({ 'background-color': '#bdccea', 'color': 'black', 'font-weight': 'bold' });
+                    $('.layui-table,.layui-table-view').css({ 'padding': '0px', 'margin': '0px' });
+                }
+            });
+
+            // 工具列点击事件
+            table.on('tool(menuruv)', function (obj) {
+                var data = obj.data; //获得当前行数据
+                var event = obj.event;
+                if (event === 'del') {
+                    layer.confirm('真的删除菜单权限记录?', function (index) {
+                        $.ajax({
+                            type: 'DELETE',
+                            url: '/SysManager/Menu/DelMenu',
+                            dataType: "json",
+                            data: data,
+                            success: function (res) {
+                                alert(JSON.stringify(res));
+                                obj.del();
+                                layer.close(layer.index);
+                            },
+                            error: function (jqXHR) {
+                                aler("发生错误：" + jqXHR.status);
+                            }
+                        });
+                    });
+                } else if (event === 'edit') {
+                    //多窗口模式，层叠置顶
+                    layer.open({
+                        //type: 2 //此处以iframe举例
+                        type: 2
+                        , title: '菜单权限信息'
+                        , area: ['690px', '460px']
+                        , skin: 'layui-layer-lan'
+                        , shade: 0.5
+                        , maxmin: true
+                        , offset: "auto"
+                        , content: '/SysManager/Menu/SetMenuInfo' //指定html
+                        //, content: $('#roleform')//指定dom type不能为iframe等，只能为0、1
+                        //, btn: ['确定'] //只是为了演示
+                        , btnAlign: 'c'
+                        , btn: ['<i class="layui-icon layui-icon-ok"></i>' + '保存', '<i class="layui-icon layui-icon-return">' + '返回']
+                        , yes: function (index, layero) {
+                            //var len = oldData.length;
+                            //var body = layer.getChildFrame('body', index);
+                            var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();                          
+                            console.log(iframeWin.layui.form.val('example'));   //这里只有layui 2.5.5的时候可以取到值
+                            alert(JSON.stringify(iframeWin.layui.form.val('example')));
+                            var newData = iframeWin.layui.form.val('example');
+                            var paramData = { Id: newData.id, Name: newData.name, ParentId: newData.parentId, Url: newData.url, Icon: newData.icon, OrderIndex: newData.orderIndex};
+                            $.ajax({
+                                type: 'POST',
+                                url: '/SysManager/Menu/EdtMenu',
+                                dataType: "json",
+                                data: paramData,
+                                success: function (res) {
+                                    var result = JSON.parse(res.data);
+                                    obj.update({ name: result.Data.Name, parentId: result.Data.ParentId, url: result.Data.Url, icon: result.Data.Icon, orderIndex: result.Data.OrderIndex});
+                                    layer.closeAll();
+                                },
+                                error: function (jqXHR) {
+                                    aler("发生错误：" + jqXHR.status);
+                                    layer.closeAll();
+                                }
+                            });
+                        }
+                        , zIndex: layer.zIndex //重点1
+                        , success: function (layero, index) {
+                            var body = layer.getChildFrame('body', index);
+                            var iframeWin = window[layero.find('iframe')[0]['name']];
+                            var dd = data;
+                            iframeWin.loadfrom(dd);
+                        }
+                    });
+                   
+                }
+            });
+
+            // 头部工具栏点击事件
+            table.on('toolbar(menuruv)', function (obj) {
+                switch (obj.event) {
+                    case 'add':
+                        //多窗口模式，层叠置顶
+                        layer.open({
+                            //type: 2 //此处以iframe举例
+                            type: 2
+                            , title: '添加菜单权限信息'
+                            , area: ['690px', '460px']
+                            , skin: 'layui-layer-lan'
+                            , shade: 0.5
+                            , maxmin: true
+                            , offset: "auto"
+                            , content: '/SysManager/Menu/SetMenuInfo' //指定html
+                            //, content: $('#roleform')//指定dom type不能为iframe等，只能为0、1
+                            //, btn: ['确定'] //只是为了演示
+                            , btnAlign: 'c'
+                            , btn: ['<i class="layui-icon layui-icon-ok"></i>' + '保存', '<i class="layui-icon layui-icon-return">' + '返回']
+                            , yes: function (index, layero) {
+                                var oldData = layui.table.cache.menu;
+                                var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();                          
+                                console.log(iframeWin.layui.form.val('example'));   //这里只有layui 2.5.5的时候可以取到值
+                                var newData = iframeWin.layui.form.val('example');
+                                var paramData = { Id: null, Name: newData.name, ParentId: newData.parentId, Url: newData.url, Icon: newData.icon, OrderIndex: newData.orderIndex, CreatedTime:null };
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/SysManager/Menu/AddMenu',
+                                    dataType: "json",
+                                    data: paramData,
+                                    success: function (res) {
+                                        var result = JSON.parse(res.data);
+                                        alert(JSON.stringify(result));
+                                        oldData.unshift({  id: result.Data.Id, name: newData.name, parentId: newData.parentId, url: newData.url, icon: newData.icon, orderIndex: newData.orderIndex, createdTime:null,pid:newData.parentId,idParent:false,  });
+                                        //url参数设置为空可以解决问题,新版即可添加
+                                        layui.table.reload('menu', { url: '', data: oldData });
+                                        layer.closeAll();
+                                    },
+                                    error: function (jqXHR) {
+                                        aler("发生错误：" + jqXHR.status);
+                                        layer.closeAll();
+                                    }
+                                });
+                            }
+                            , zIndex: layer.zIndex //重点1
+                            , success: function (layero, index) {
+                                var iframeWin = window[layero.find('iframe')[0]['name']];
+                                var dd = { id: null, parentId: null, name: null, url: null, icon: null, orderIndex:null };
+                                iframeWin.loadfrom(dd);
+                            }
+                        });
+                        break;
+                    //case 'delete':
+                    //    layer.msg('删除');
+                    //    break;
+                    //case 'update':
+                    //    layer.msg('编辑');
+                    //    break;
+                    //case 'LAYTABLE_TIPS':
+                    //    layer.msg('提示');
+                    //    break;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

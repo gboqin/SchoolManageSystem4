@@ -11,7 +11,7 @@
 </head>
 <body style="width:100%;height:100%;margin:0;padding:0">
     <script type="text/html" id="toolbar">
-        <div class="layui-form-item" style="margin-bottom:5px">
+        <div class="layui-form-item" style="margin-top:0;margin-bottom:5px">
             <label class="layui-form-label" style="width:auto" for="rolename">角色名称</label>
             <div class="layui-input-inline">
                 <input type="text" style=" height: 30px; line-height: 30px" id="rolename" name="rolename" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input layui-input-sm">
@@ -79,6 +79,7 @@
                         toolbar: '#bar'
                     }]
                 ],
+                style: 'margin:0;',
                 page: true
                 , limits: [10, 20, 30]  //一页选择显示3,5或10条数据
                 , limit: 10  //一页显示10条数据
@@ -153,19 +154,22 @@
                                 console.log(iframeWin.layui.form.val('example'));   //这里只有layui 2.5.5的时候可以取到值
                                 alert(JSON.stringify(iframeWin.layui.form.val('example')));
                                 var newData = iframeWin.layui.form.val('example');
-                                //循环数据，找到更新的数据行，直接更新
-                                for (var i = 0; i < len; i++) {
-                                    if (oldData[i].Id == data.Id) {
-                                        oldData[i].Name = newData.Name;
-                                        oldData[i].RoleDesc = newData.RoleDesc;
-                                        oldData[i].Num = newData.Num;
-                                        break;
+                                var paramData = { Id: newData.Id, Name: newData.Name, RoleDesc: newData.RoleDesc, Num: newData.Num, ModifiedTime: null, OperatorName: null };
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/SysManager/Role/EdtRole',
+                                    dataType: "json",
+                                    data: paramData,
+                                    success: function (res) {
+                                        var result = JSON.parse(res.data);
+                                        obj.update({ Name: result.Data.Name, RoleDesc: result.Data.RoleDesc, Num: result.Data.Num });
+                                        layer.closeAll();
+                                    },
+                                    error: function (jqXHR) {
+                                        aler("发生错误：" + jqXHR.status);
+                                        layer.closeAll();
                                     }
-                                }
-                                alert(JSON.stringify(oldData));
-                                //重新加一下数据
-                                obj.update({ Name: newData.Name, RoleDesc: newData.RoleDesc, Num:newData.Num});
-                                layer.closeAll();
+                                });
                             }
                             , zIndex: layer.zIndex //重点1
                             , success: function (layero, index) {
@@ -201,9 +205,59 @@
                             //        }
                             //    }
                             //}, 'json');
-                            obj.del();
-                            layer.close(index);
+                            $.ajax({
+                                type: 'DELETE',
+                                url: '/SysManager/Role/DelRole',
+                                dataType: "json",
+                                data: data,
+                                success: function (res) {
+                                    obj.del();
+                                    layer.close(index);
+                                },
+                                error: function (jqXHR) {
+                                    aler("发生错误：" + jqXHR.status);
+                                }
+                            });
                         });
+                    case 'assingPre':
+                        var rmData,idsData;
+                        $.ajax({
+                            url: '/SysManager/Role/GetMenus',   //在控制层读取数据的地址
+                            type: 'get',                 //提交方式
+                            dataType: 'json',            //数据格式json
+                            success: function (data) {
+                                rmData = JSON.parse(data.data);
+                            }
+                        });
+
+                        $.ajax({
+                            url: '/SysManager/Role/GetMenuIdsByRId?Id=' + data.Id,   //在控制层读取数据的地址
+                            type: 'get',                 //提交方式
+                            dataType: 'json',            //数据格式json
+                            success: function (data) {
+                                idsData = JSON.parse(data.data);
+                            }
+                        });
+                        //多窗口模式，层叠置顶
+                        layer.open({
+                            //type: 2 //此处以iframe举例
+                            type: 2
+                            , title: '分配权限'
+                            , area: ['690px', '460px']
+                            , skin: 'layui-layer-lan'
+                            , shade: 0.5
+                            , maxmin: true
+                            , offset: "auto"
+                            , content: '/SysManager/Role/AssignPermissions' //指定html
+                            , zIndex: layer.zIndex //重点1
+                            , success: function (layero, index) {
+                                var iframeWin = window[layero.find('iframe')[0]['name']];
+                                /*var dd = data;*/
+                                var dd = {"Id":data.Id,"rmData":rmData,"idsData":idsData}
+                                iframeWin.loadfrom(dd);
+                            }
+                        });
+                        break;
                     default:
                         break;
                 }
@@ -238,12 +292,27 @@
                             console.log(iframeWin.layui.form.val('example'));   //这里只有layui 2.5.5的时候可以取到值
                             alert(JSON.stringify(iframeWin.layui.form.val('example')));
                             var newData = iframeWin.layui.form.val('example');
+                            var paramData = { Id: null, Name: newData.Name, RoleDesc: newData.RoleDesc, Num: newData.Num, ModifiedTime: null, OperatorName: null } ;
+                            $.ajax({
+                                type: 'POST',
+                                url: '/SysManager/Role/AddRole',
+                                dataType: "json",
+                                data: paramData,
+                                success: function (res) {
+                                    var result = JSON.parse(res.data);
+                                    oldData.unshift({ Id: result.Data.Id, Name: result.Data.Name, RoleDesc: result.Data.RoleDesc, Num: result.Data.Num });
+                                    //url参数设置为空可以解决问题,新版即可添加
+                                    layui.table.reload('roleTable', { url: '', data: oldData });
+                                    layer.closeAll();
+                                },
+                                error: function (jqXHR) {
+                                    aler("发生错误：" + jqXHR.status);
+                                    layer.closeAll();
+                                }
+                            });
 
-                            oldData.unshift({ Id: 3, Name: newData.Name, RoleDesc: newData.RoleDesc, Num: newData.Num });
-                            alert(JSON.stringify(oldData));
-                            //url参数设置为空可以解决问题,新版即可添加
-                            layui.table.reload('roleTable', { url:'',data: oldData });
-                            layer.closeAll();
+
+                            
                         }
                         , zIndex: layer.zIndex //重点1
                         , success: function (layero, index) {

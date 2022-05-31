@@ -1,0 +1,192 @@
+﻿@{
+    Layout = "~/Areas/SysManager/Views/Shared/_LayoutForm.cshtml";
+}
+<form class="layui-form" lay-filter="example">
+    <div class="layui-form-item" hidden>
+        <input type="text" name="Id" id="Id" class="layui-input">
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">菜单功能</label>
+        <div class="layui-input-block">
+            <div id="ap" class="demo-tree-more"></div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <a href="javascript:;" class="layui-btn" id="btnSave">
+                <i class="layui-icon">&#xe608;</i>  保存设置
+            </a>
+            @*<button class="layui-btn"  id="btnSave">立即提交</button>*@
+        </div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    var loadfrom = function loaddata(data) {
+        var dd2 = JSON.stringify(data);
+        var ddd = JSON.parse(dd2);
+        layui.form.val('example', ddd);
+
+        layui.use('tree', function () {
+            var tree = layui.tree;
+            tree.render({
+                elem: '#ap',      //对应你要绑定的元素
+                id: 'ap1',
+                data: ddd.rmData.Data,
+                showCheckbox: true      //是否显示复选框
+            });
+
+            tree.setChecked('ap1', ddd.idsData.Data); //勾选指定节点
+            //$.ajax({
+            //    url: '/SysManager/Role/GetMenus',   //在控制层读取数据的地址
+            //    type: 'get',                 //提交方式
+            //    dataType: 'json',            //数据格式json
+            //    success: function (data) {
+            //        var jsData = JSON.parse(data.data);
+            //        tree.render({
+            //            elem: '#ap',      //对应你要绑定的元素
+            //            id:'ap1',
+            //            data: jsData.Data,
+            //            showCheckbox: true      //是否显示复选框
+            //        });
+            //    }
+            //});
+
+            //$.ajax({
+            //    url: '/SysManager/Role/GetMenuIdsByRId?Id=' + $("#Id").val(),   //在控制层读取数据的地址
+            //    type: 'get',                 //提交方式
+            //    dataType: 'json',            //数据格式json
+            //    success: function (data) {
+            //        var jsData = JSON.parse(data.data);
+            //        tree.setChecked('ap1', jsData.Data); //勾选指定节点
+            //    }
+            //});
+
+            $("#btnSave").on('click', function () {
+                //声明一个对象            
+                var obj = new Object();
+                obj.RId = $("#Id").val();
+                var checkedData = tree.getChecked('ap1'); //获取选中节点的数据
+                var nodeIds = new Array();
+                nodeIds = getCheckedId(checkedData);
+                nodeIds = nodeIds.split(","); //字符分割
+                obj.SetIds = nodeIds;
+                obj.RawIds = ddd.idsData.Data;
+                //alert(JSON.stringify(obj));
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/SysManager/Role/Assign',
+                    dataType: "json",
+                    data: obj,
+                    success: function (res) {
+                        alert(JSON.stringify(res));
+                        alert('成功');
+                    },
+                    error: function (jqXHR) {
+                        aler("发生错误：" + jqXHR.status);
+                    }
+                });
+            });
+
+            // 获取选中节点的id，不要父节点Id
+            function getCheckedId(jsonObj) {
+                var id = "";
+                $.each(jsonObj, function (index, item) {
+                    if (id != "") {
+                        //只保留无子节的Id
+                        if (item.children.length==0)
+                          id = id + "," + item.id;
+                    }
+                    else {
+                        if (item.children.length == 0)
+                          id = item.id;
+                    }
+                    var i = getCheckedId(item.children);
+                    if (i != "") {
+                        if (id == "")
+                            id = i
+                        else
+                          id = id + "," + i;
+                    }
+                });
+                return id;
+            }
+        });
+    };
+
+    /*layui.use('tree', function () {
+        var tree = layui.tree;
+        //保存设置
+        $("#btnSave").on('click', function () {
+            //声明一个对象            
+            var obj = new Object();
+            obj.Id = $("#Id").val();
+            alert($("#Id").val());
+            var checkedData = tree.getChecked('ap1'); //获取选中节点的数据
+            alert(2);
+            var nodeIds = new Array();
+            nodeIds = getCheckedId(checkedData);
+            nodeIds = nodeIds.split(","); //字符分割
+            obj.Ids = nodeIds;
+            alert(JSON.stringify(obj));
+            //经过以上一波操作，封装了一个对象，里面包含了ID和树状最子级集合
+            //var _roleId = $("#hidfRoleId").val();
+            //var cbxs = $(".layui-table").find('tbody input[type="checkbox"]');
+            //var _list = [];
+            //cbxs.each(function (index, item) {
+            //    if (item.checked == true) {
+            //        var _row = { MenuId: 0, RoleId: 0, ActionId: 0 };
+            //        var _name = item.name;//chx_2
+            //        if (_name.indexOf('cbx_') > -1) {
+            //            _name = _name.replace('cbx_', '');
+            //        } else {
+            //            _name = item.getAttribute('tag');
+            //            if (_name.indexOf('cbx_') > -1) {
+            //                _name = _name.replace('cbx_', '');
+            //            }
+            //        }
+            //        _row.MenuId = _name;
+            //        _row.ActionId = item.value == "on" ? null : item.value;
+            //        _row.RoleId = _roleId;
+            //        _list.push(_row);
+            //    }
+            //});
+            //$.ajax({
+            //    url: "/Permissions/MenuRoleAction/InsertBatch",
+            //    type: "POST",
+            //    data: { "list": _list, roleId: _roleId },
+            //    dataType: "json",
+            //    success: function (data) {
+            //        if (data.state == "success") {
+            //            common.msgSuccess("保存成功");
+            //        } else {
+            //            common.msgError("保存失败");
+            //        }
+            //        setTimeout(CloseWin, 1500);
+            //    }
+            //});
+        });
+
+        // 获取选中节点的id
+        function getCheckedId(jsonObj) {
+            var id = "";
+            $.each(jsonObj, function (index, item) {
+                var i;
+                if (item.children == null) {
+                    id = item.id;
+                } else {
+                    i = getCheckedId(item.children);
+                }
+                if (i != null && id != "") {
+                    id = id + "," + i;
+                } else if (i != null) {
+                    id = i;
+                }
+            });
+            return id;
+        }
+    }
+        */
+</script>
+
